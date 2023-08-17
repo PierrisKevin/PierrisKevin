@@ -15,5 +15,5 @@ Here are some ideas to get you started:
 - ⚡ Fun fact: ...
 -->
 <p align="center">
-  <img src="https://github.com/matyo91/matyo91/raw/main/assets/github.gif" alt="Hi, I'm Kevin RAND 👋 I'm a 🚀 WEB DEVELOPPEUR 🚀 I ❤️ Happy Hardcore ❤️">
+  <img src="https://i.pinimg.com/originals/f6/71/30/f67130910fe3de7e8de289525054fe47.gif" alt="Hi, I'm Kevin RAND 👋 I'm a 🚀 WEB DEVELOPPEUR 🚀 I ❤️ Happy Hardcore ❤️">
 </p>
