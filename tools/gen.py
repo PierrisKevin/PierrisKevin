@@ -1,376 +1,886 @@
 #!/usr/bin/env python3
 # ============================================================
 #  PIXEL README GENERATOR — Kevin RAND
-#  Modifie la CONFIG ci-dessous puis lance :  python3 tools/gen.py
-#  (MAJUSCULES uniquement, caractères : A-Z 0-9 ! . , : @ - ' + < > / ? ( ) % _ | et * = coeur)
+#  Pixel art discret, inspiré de GENIDRAW : typo fine, ornements pixel à plusieurs
+#  opacités, flore qui pousse depuis les coins, trames en demi-teinte, barres segmentées.
+#  Chaque visuel est généré en version claire ET sombre (assets/light, assets/dark).
+#
+#  Modifie la CONFIG ci-dessous puis lance :  python tools/gen.py
+#  Dépendance : pip install fonttools  (les polices OFL sont téléchargées au 1er lancement)
 # ============================================================
-NAME      = "KEVIN RAND"
-SUBTITLES = ["WEB DEVELOPER", "BUG HUNTER", "HAPPY HARDCORE ADDICT"]
-DIALOG    = ["HEY! WELCOME TO MY PROFILE.", "I BUILD STUFF FOR THE WEB.", "FUELED BY HAPPY HARDCORE @ 180 BPM."]
+FIRST, LAST = "KEVIN", "RAND"
+ROLES     = ["web developer", "bug hunter", "hardcore addict"]      # mot manuscrit qui tourne
+BADGE     = "WEB DEVELOPER • BUG HUNTER • 180 BPM • "               # texte du badge circulaire
+STATUS    = "CODING @ 180 BPM"
+KICKER    = "N°07 — PLAYER ONE"
+CLAIM     = "I BUILD STUFF FOR THE WEB."
+NOTE      = ["FUELED BY HAPPY", "HARDCORE @ 180 BPM"]
+HELLO     = "HEY! WELCOME TO MY PROFILE."
+INTRO     = ["I BUILD STUFF FOR THE WEB, FUELED BY", "HAPPY HARDCORE @ 180 BPM."]    # une entrée = une ligne
 CLASS     = "WEB DEVELOPER"
 LEVEL     = "07"
-STATS     = [("FRONTEND",9),("BACKEND",7),("DEBUG",8),("UI / UX",6),("CAFFEINE",10),("BPM",10)]
-# (label dans la case, icone, nom, description ligne 1, ligne 2, rareté 1-5)
+COUNTERS  = [("07", "LEVEL"), ("10", "ITEMS IN BAG"), ("180", "BPM"), ("99+", "COFFEES")]
+STATS     = [("FRONTEND", 9), ("BACKEND", 7), ("DEBUG", 8), ("UI / UX", 6), ("CAFFEINE", 10), ("BPM", 10)]
+# (nom, icône, description ligne 1, ligne 2, rareté 1-5)
 ITEMS = [
- ("JS",   "sword",  "SWORD OF JAVASCRIPT", "MAIN WEAPON.",           "HITS EVERY BROWSER.", 5),
- ("TS",   "shield", "TYPESCRIPT SHIELD",   "BLOCKS 99% OF",          "RUNTIME BUGS.", 4),
- ("HTML", "scroll", "HTML SCROLL",         "THE MAP OF",             "EVERY LEVEL.", 3),
- ("CSS",  "gem",    "CSS GEM",             "MAKES ANYTHING",         "SHINE.", 4),
- ("REACT","ring",   "REACT RING",          "SUMMONS REUSABLE",       "COMPONENTS.", 5),
- ("NODE", "potion", "NODE POTION",         "RESTORES",               "BACKEND HP.", 4),
- ("PHP",  "hammer", "PHP HAMMER",          "OLD SCHOOL.",            "STILL HITS HARD.", 3),
- ("SQL",  "key",    "SQL KEY",             "OPENS EVERY",            "DATABASE.", 3),
- ("GIT",  "book",   "GIT BOOK",            "REWINDS TIME.",          "INFINITE SAVES.", 5),
- ("BASH", "bomb",   "BASH BOMB",           "ONE COMMAND.",           "BOOM.", 4),
+    ("JavaScript", "sword",  "MAIN WEAPON.",     "HITS EVERY BROWSER.", 5),
+    ("TypeScript", "shield", "BLOCKS 99% OF",    "RUNTIME BUGS.",       4),
+    ("HTML",       "scroll", "THE MAP OF",       "EVERY LEVEL.",        3),
+    ("CSS",        "gem",    "MAKES ANYTHING",   "SHINE.",              4),
+    ("React",      "ring",   "SUMMONS REUSABLE", "COMPONENTS.",         5),
+    ("Node.js",    "potion", "RESTORES",         "BACKEND HP.",         4),
+    ("PHP",        "hammer", "OLD SCHOOL.",      "STILL HITS HARD.",    3),
+    ("SQL",        "key",    "OPENS EVERY",      "DATABASE.",           3),
+    ("Git",        "book",   "REWINDS TIME.",    "INFINITE SAVES.",     5),
+    ("Bash",       "bomb",   "ONE COMMAND.",     "BOOM.",               4),
 ]
-TRACK = "*** NOW PLAYING: HAPPY HARDCORE MEGAMIX VOL. 180 *** STAY HAPPY, STAY HARDCORE ***"
+TRACK     = ("HAPPY HARDCORE MEGAMIX", "VOL. 180 — STAY HAPPY, STAY HARDCORE")
+SECTIONS  = {  # séparateurs : (texte gauche, texte droite)
+    "profile": ("PLAYER 1", "PROFILE"),
+    "stack":   ("INVENTORY", "STACK"),
+    "scores":  ("HIGH SCORES", "GITHUB"),
+    "music":   ("NOW PLAYING", "SOUNDTRACK"),
+    "bonus":   ("BONUS STAGE", "CONTRIBUTIONS"),
+    "contact": ("CONTINUE ?", "CONTACT"),
+}
+OUTRO     = ("LET'S BUILD", "SOMETHING", "together")
+LINKS     = [("email", "EMAIL"), ("linkedin", "LINKEDIN"), ("portfolio", "PORTFOLIO")]
 # ============================================================
-import random, os
-OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "assets")
-F = {
-'A':[".###.","#...#","#...#","#####","#...#","#...#","#...#"],'B':["####.","#...#","#...#","####.","#...#","#...#","####."],
-'C':[".###.","#...#","#....","#....","#....","#...#",".###."],'D':["####.","#...#","#...#","#...#","#...#","#...#","####."],
-'E':["#####","#....","#....","####.","#....","#....","#####"],'F':["#####","#....","#....","####.","#....","#....","#...."],
-'G':[".###.","#...#","#....","#.###","#...#","#...#",".####"],'H':["#...#","#...#","#...#","#####","#...#","#...#","#...#"],
-'I':["#####","..#..","..#..","..#..","..#..","..#..","#####"],'J':["..###","...#.","...#.","...#.","...#.","#..#.",".##.."],
-'K':["#...#","#..#.","#.#..","##...","#.#..","#..#.","#...#"],'L':["#....","#....","#....","#....","#....","#....","#####"],
-'M':["#...#","##.##","#.#.#","#.#.#","#...#","#...#","#...#"],'N':["#...#","##..#","#.#.#","#..##","#...#","#...#","#...#"],
-'O':[".###.","#...#","#...#","#...#","#...#","#...#",".###."],'P':["####.","#...#","#...#","####.","#....","#....","#...."],
-'Q':[".###.","#...#","#...#","#...#","#.#.#","#..#.",".##.#"],'R':["####.","#...#","#...#","####.","#.#..","#..#.","#...#"],
-'S':[".####","#....","#....",".###.","....#","....#","####."],'T':["#####","..#..","..#..","..#..","..#..","..#..","..#.."],
-'U':["#...#","#...#","#...#","#...#","#...#","#...#",".###."],'V':["#...#","#...#","#...#","#...#","#...#",".#.#.","..#.."],
-'W':["#...#","#...#","#...#","#.#.#","#.#.#","##.##","#...#"],'X':["#...#","#...#",".#.#.","..#..",".#.#.","#...#","#...#"],
-'Y':["#...#","#...#",".#.#.","..#..","..#..","..#..","..#.."],'Z':["#####","....#","...#.","..#..",".#...","#....","#####"],
-'0':[".###.","#...#","#..##","#.#.#","##..#","#...#",".###."],'1':["..#..",".##..","..#..","..#..","..#..","..#..",".###."],
-'2':[".###.","#...#","....#","...#.","..#..",".#...","#####"],'3':["####.","....#","....#",".###.","....#","....#","####."],
-'4':["...#.","..##.",".#.#.","#..#.","#####","...#.","...#."],'5':["#####","#....","####.","....#","....#","#...#",".###."],
-'6':[".###.","#....","#....","####.","#...#","#...#",".###."],'7':["#####","....#","...#.","..#..",".#...",".#...",".#..."],
-'8':[".###.","#...#","#...#",".###.","#...#","#...#",".###."],'9':[".###.","#...#","#...#",".####","....#","....#",".###."],
-'!':["..#..","..#..","..#..","..#..","..#..",".....","..#.."],'.':[".....",".....",".....",".....",".....",".....","..#.."],
-',':[".....",".....",".....",".....",".....","..#..",".#..."],':':[".....","..#..",".....",".....",".....","..#..","....."],
-'@':[".###.","#...#","#.###","#.#.#","#.###","#....",".###."],'-':[".....",".....",".....",".###.",".....",".....","....."],
-"'":["..#..","..#..",".#...",".....",".....",".....","....."],'+':[".....","..#..","..#..","#####","..#..","..#..","....."],
-'<':["...#.","..#..",".#...","#....",".#...","..#..","...#."],'>':[".#...","..#..","...#.","....#","...#.","..#..",".#..."],
-'/':["....#","....#","...#.","..#..",".#...","#....","#...."],'?':[".###.","#...#","....#","...#.","..#..",".....","..#.."],
-'(':["...#.","..#..",".#...",".#...",".#...","..#..","...#."],')':[".#...","..#..","...#.","...#.","...#.","..#..",".#..."],
-'%':["##..#","##..#","...#.","..#..",".#...","#..##","#..##"],'_':[".....",".....",".....",".....",".....",".....","#####"],
-'|':["..#..","..#..","..#..","..#..","..#..","..#..","..#.."],'*':[".....",".#.#.","#####","#####",".###.","..#..","....."],
-'}':["#....","##...","###..","####.","###..","##...","#...."],' ':["....."]*7,
-}
-def tp(s,x0,y0,p):
-    return "".join(f"M{x0+(i*6+c)*p} {y0+r*p}h{p}v{p}h-{p}z" for i,ch in enumerate(s) for r,row in enumerate(F[ch]) for c,v in enumerate(row) if v=='#')
-def tw(s,p): return (len(s)*6-1)*p
-def sp(rows,x0,y0,p):
-    return "".join(f"M{x0+c*p} {y0+r*p}h{p}v{p}h-{p}z" for r,row in enumerate(rows) for c,v in enumerate(row) if v=='#')
-def outline(rows):
-    h=len(rows)+2; w=len(rows[0])+2; g=[["."]*w for _ in range(h)]
-    for r,row in enumerate(rows):
-        for c,v in enumerate(row):
-            if v=='#':
-                for dr in (-1,0,1):
-                    for dc in (-1,0,1): g[r+1+dr][c+1+dc]='#'
-    return ["".join(x) for x in g]
-def svg(w,h,body,css=""):
-    return (f'<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {w} {h}" shape-rendering="crispEdges">'
-            f'<style>{BASE_CSS}{css}</style><rect width="{w}" height="{h}" fill="#000"/>{body}</svg>')
-BASE_CSS=(".bl{animation:bl 1s steps(1) infinite}@keyframes bl{50%{opacity:0}}"
-          ".tw{animation:tw 1.6s steps(1) infinite}@keyframes tw{50%{opacity:0}}")
-_k=[0]
-def seq(items,D):
-    """items=[(svg, t0, t1)] visible from t0 to t1 inside a D-second loop (wrap allowed)."""
-    css=""; out=""
-    for body,t0,t1 in items:
-        _k[0]+=1; n=f"q{_k[0]}"; a=t0/D*100; b=t1/D*100
-        if t0<t1: kf=f"0%{{opacity:{1 if a==0 else 0}}}{a:.3f}%{{opacity:1}}{b:.3f}%{{opacity:0}}100%{{opacity:{1 if b>=100 else 0}}}"
-        else:     kf=f"0%{{opacity:1}}{b:.3f}%{{opacity:0}}{a:.3f}%{{opacity:1}}100%{{opacity:1}}"
-        css+=f".{n}{{animation:{n} {D}s step-end infinite}}@keyframes {n}{{{kf}}}"
-        out+=f'<g class="{n}">{body}</g>'
-    return out,css
-def box(x,y,w,h,t=4):
-    return f'<path d="M{x} {y}h{w}v{h}h-{w}zM{x+t} {y+t}v{h-2*t}h{w-2*t}v-{h-2*t}z" fill="#fff" fill-rule="evenodd"/>'
-def nbox(x,y,w,h):  # notched double frame
-    return (f'<path d="M{x+4} {y}h{w-8}v4h4v{h-8}h-4v4h-{w-8}v-4h-4v-{h-8}h4z" fill="#fff"/>'
-            f'<path d="M{x+4} {y+4}h{w-8}v{h-8}h-{w-8}z" fill="#000"/>'
-            f'<path d="M{x+10} {y+10}h{w-20}v2h-{w-20}zM{x+10} {y+h-12}h{w-20}v2h-{w-20}z" fill="#fff"/>')
-SCAN=('<defs><pattern id="scan" width="4" height="4" patternUnits="userSpaceOnUse"><rect y="3" width="4" height="1" fill="#000"/></pattern></defs>')
-def scan(w,h): return f'<rect width="{w}" height="{h}" fill="url(#scan)" opacity=".55" pointer-events="none"/>'
+import colorsys, datetime, math, os, urllib.request
+from fontTools.ttLib import TTFont
+from fontTools.varLib import instancer
+from fontTools.pens.svgPathPen import SVGPathPen
+from fontTools.pens.transformPen import TransformPen
 
-# ---------------- SPRITES ----------------
-HEAD=["...######...","..#......#..",".#.######.#.","##.#.##.#.##","##.######.##","##.##..##.##","...######...","..########..",".##.####.##.",".#..####..#.","....####...."]
-LA=["..##....##..","..##....##..",".##......##."]
-LB=["....####....","....#..#....","...##..##..."]
-BUG=["#......#",".#.####.","..####..","########","..####..",".#.##.#."]
-COIN_A=[".####.","#....#","#.##.#","#.##.#","#.##.#","#.##.#","#....#",".####."]
-COIN_B=["..##..",".#..#.",".#..#.",".#..#.",".#..#.",".#..#.",".#..#.","..##.."]
-FACE=["....########....","..############..",".##############.","#.############.#","##.##......##.##","##.#........#.##",
-      "##.#........#.##","##.#........#.##","##.#........#.##",".#.#..####..#.#.","...#........#...","....#......#....",
-      ".....######.....","......#..#......","...##########...","..#..........#.."]
-EYES=["................"]*6+["....#.##..##.#..".replace("#.##","..##").replace("##.#","##..")]+["................"]*9
-EYES=[["."]*16 for _ in range(16)]
-for r in (6,7):
-    for c in (5,6,9,10): EYES[r][c]="#"
-EYES_OPEN=["".join(r) for r in EYES]
-EYES_TOP=["".join("#" if (r==6 and c in (5,6,9,10)) else "." for c in range(16)) for r in range(16)]
-ICONS={
-'sword':[".........#","........##",".......##.","......##..","#....##...",".#..##....","..###.....","..##......",".#..#.....","#........."],
-'shield':["##########","#........#","#.######.#","#.######.#","#.######.#",".#.####.#.",".#.####.#.","..#.##.#..","...#..#...","....##...."],
-'scroll':[".########.","#........#",".#.####.#.",".#......#.",".#.####.#.",".#......#.",".#.###..#.",".#......#.","#........#",".########."],
-'gem':["..######..",".#..##..#.","#..#..#..#","##########","#.#....#.#",".#.#..#.#.","..#.##.#..","...#..#...","....##....",".........."],
-'ring':["...####...","..#.##.#..","...####...","..#....#..",".#......#.",".#......#.",".#......#.","..#....#..","...####...",".........."],
-'potion':["...####...","....##....","....##....","...#..#...","..#....#..",".#......#.",".#.####.#.",".#.####.#.","..#....#..","...####..."],
-'hammer':[".######...","########..",".######...","...##.....","...##.....","...##.....","...##.....","...##.....","...##.....","...##....."],
-'key':["..........","..........",".###......","#...#.....","#...######","#...#.#.#.",".###..#.#.","..........","..........",".........."],
-'book':[".########.","#.#......#","#.#.####.#","#.#......#","#.#.####.#","#.#......#","#.#......#","#.########","#.#.......",".#########"],
-'bomb':["......#.#.",".....#....","....##....","..######..",".########.","##.#######","#.########","##########",".########.","..######.."],
+ROOT = os.path.dirname(os.path.abspath(__file__))
+OUT = os.path.join(ROOT, "..", "assets")
+FONT_DIR = os.path.join(ROOT, "fonts")
+FONT_URLS = {
+    "outfit": "https://github.com/google/fonts/raw/main/ofl/outfit/Outfit%5Bwght%5D.ttf",
+    "mono":   "https://github.com/google/fonts/raw/main/ofl/jetbrainsmono/JetBrainsMono%5Bwght%5D.ttf",
+    "script": "https://github.com/google/fonts/raw/main/ofl/greatvibes/GreatVibes-Regular.ttf",
 }
 
-# ============ 1. BANNER ============
-def banner():
-    random.seed(3); W,H,G=900,320,284; T=3.0
-    css=(".mt{animation:mt 40s linear infinite}@keyframes mt{to{transform:translateX(-900px)}}"
-         ".gr{animation:gr .1s linear infinite}@keyframes gr{to{transform:translateX(-32px)}}"
-         f".mov{{animation:mov {T}s linear infinite}}@keyframes mov{{from{{transform:translateX(920px)}}to{{transform:translateX(-40px)}}}}"
-         f".jmp{{animation:jmp {T}s steps(14) infinite}}@keyframes jmp{{0%,76%{{transform:translateY(0)}}85%{{transform:translateY(-68px)}}94%,100%{{transform:translateY(0)}}}}"
-         ".fa{animation:fa .24s steps(1) infinite}@keyframes fa{50%{opacity:0}}"
-         ".fb{animation:fb .24s steps(1) infinite}@keyframes fb{0%{opacity:0}50%{opacity:1}}"
-         ".ca{animation:fa .4s steps(1) infinite}.cb{animation:fb .4s steps(1) infinite}"
-         f".got{{animation:got {T}s step-end infinite}}@keyframes got{{0%{{opacity:1}}83%{{opacity:0}}}}"
-         f".dust{{animation:dust {T}s step-end infinite}}@keyframes dust{{0%{{opacity:1}}76%{{opacity:0}}94%{{opacity:1}}}}"
-         f".pts{{opacity:0;animation:pts {T}s steps(1) infinite}}@keyframes pts{{0%,83%{{opacity:0;transform:translateY(0)}}84%{{opacity:1;transform:translateY(0)}}91%{{opacity:1;transform:translateY(-10px)}}97%,100%{{opacity:0}}}}"
-         ".gl{opacity:0;animation:gl 5s steps(1) infinite}@keyframes gl{0%,89%{opacity:0;transform:translateX(0)}90%{opacity:1;transform:translateX(12px)}92%{transform:translateX(-10px)}94%{transform:translateX(6px)}95%,100%{opacity:0;transform:translateX(0)}}"
-         ".gl2{animation-delay:.12s}")
-    b=['<defs><pattern id="d1" width="4" height="4" patternUnits="userSpaceOnUse"><rect width="2" height="2" fill="#fff"/><rect x="2" y="2" width="2" height="2" fill="#fff"/></pattern>'
-       '<pattern id="d2" width="8" height="8" patternUnits="userSpaceOnUse"><rect width="2" height="2" fill="#fff"/><rect x="4" y="4" width="2" height="2" fill="#fff"/></pattern>'
-       '<pattern id="d3" width="12" height="12" patternUnits="userSpaceOnUse"><rect width="2" height="2" fill="#fff"/><rect x="6" y="6" width="2" height="2" fill="#fff"/></pattern>'
-       '<pattern id="scan" width="4" height="4" patternUnits="userSpaceOnUse"><rect y="3" width="4" height="1" fill="#000"/></pattern></defs>']
-    for _ in range(50):
-        x=random.randrange(0,W,4); y=random.randrange(52,230,4); c=' class="tw"' if random.random()<.4 else ''
-        dl=f' style="animation-delay:{random.uniform(0,1.6):.1f}s"' if c else ''
-        b.append(f'<rect{c}{dl} x="{x}" y="{y}" width="2" height="2" fill="#fff"/>')
-    ring=["...####...","..#....#..",".#......#.","#........#","#........#","#........#","#........#",".#......#.","..#....#..","...####..."]
-    b.append(f'<path d="{sp(["...####...","..######..",".########.","##########","##########","##########","##########",".########.","..######..","...####..."],790,60,5)}" fill="url(#d1)"/><path d="{sp(ring,790,60,5)}" fill="#fff"/>')
-    def mountains(seed,amp,step,fill,dur):
-        random.seed(seed); h=[]; cur=amp//2
-        for i in range(900//step): cur=max(8,min(amp,cur+random.choice([-8,-4,0,4,8]))); h.append(cur)
-        d="".join(f"M{i*step+k} {G-hh}h{step}v{hh}h-{step}z" for k in (0,900) for i,hh in enumerate(h))
-        return f'<g class="mt" style="animation-duration:{dur}s"><path d="{d}" fill="{fill}"/></g>'
-    b.append(mountains(11,80,16,"url(#d3)",60))
-    # city layer
-    random.seed(21); x=0; bl=[]; wn=[]; ins=[]
-    while x<900:
-        bw=random.choice([24,32,40,48]); bh=random.choice([16,24,32,40,48,56])
-        for k in (0,900):
-            bl.append(f'M{x+k} {G-bh}h{bw}v{bh}h-{bw}z'); ins.append(f'M{x+k+2} {G-bh+2}h{bw-4}v{bh-2}h-{bw-4}z')
-            for wy in range(G-bh+6,G-6,8):
-                for wx in range(x+6,x+bw-6,8):
-                    if random.random()<.3: wn.append(f'M{x+k+wx-x} {wy}h4v4h-4z')
-        x+=bw+random.choice([8,16,24,40])
-    b.append(f'<g class="mt" style="animation-duration:24s"><path d="{"".join(bl)}" fill="#fff"/><path d="{"".join(ins)}" fill="#000"/><path d="{"".join(wn)}" fill="#fff"/></g>')
-    # HUD
-    p=3; b.append(f'<path class="bl" d="{tp("1UP",24,18,p)}" fill="#fff"/>')
-    items=[(f'<path d="{tp(f"{4200+i*100:06d}",24+tw("1UP ",p)+6,18,p)}" fill="#fff"/>', (i*T+2.55)%(6*T), ((i+1)*T+2.55)%(6*T)) for i in range(6)]
-    g,c=seq(items,6*T); b.append(g); css+=c
-    s="HI-SCORE 999999"; b.append(f'<path d="{tp(s,(W-tw(s,p))//2,18,p)}" fill="#fff"/>')
-    s="STAGE 01  ***"; b.append(f'<path d="{tp(s,W-24-tw(s,p),18,p)}" fill="#fff"/>')
-    b.append(f'<rect x="24" y="46" width="{W-48}" height="2" fill="#fff"/><rect x="24" y="50" width="{W-48}" height="2" fill="url(#d1)"/>')
-    # TITLE + glitch
-    p=9; x=(W-tw(NAME,p))//2; y=74
-    b.append(f'<rect x="{x-18}" y="{y-12}" width="{tw(NAME,p)+36}" height="{7*p+24}" fill="#000"/>')
-    b.append(f'<path d="{tp(NAME,x+5,y+5,p)}" fill="url(#d1)"/><path d="{tp(NAME,x,y,p)}" fill="#fff"/>')
-    for i,(yy,hh) in enumerate([(y+18,18),(y+45,9)]):
-        b.append(f'<clipPath id="gc{i}"><rect x="0" y="{yy}" width="{W}" height="{hh}"/></clipPath>'
-                 f'<g clip-path="url(#gc{i})"><g class="gl{" gl2" if i else ""}"><rect x="0" y="{yy}" width="{W}" height="{hh}" fill="#000"/><path d="{tp(NAME,x,y,p)}" fill="#fff"/></g></g>')
-    # rotating subtitle
-    p=4; D=len(SUBTITLES)*3.2; items=[]
-    for i,s in enumerate(SUBTITLES):
-        t="} "+s; sx=(W-tw(t,p))//2
-        items.append((f'<rect x="{sx-10}" y="146" width="{tw(t,p)+40}" height="36" fill="#000"/><path d="{tp(t,sx,150,p)}" fill="#fff"/><rect class="bl" x="{sx+tw(t,p)+10}" y="150" width="12" height="28" fill="#fff"/>', i*3.2, (i+1)*3.2))
-    g,c=seq(items,D); b.append(g); css+=c
-    # ground
-    b.append(f'<rect x="0" y="{G}" width="{W}" height="{H-G}" fill="#000"/><rect x="0" y="{G}" width="{W}" height="4" fill="#fff"/>')
-    gd="".join(f"M{i*32} {G+8}h12v4h-12zM{i*32+20} {G+16}h4v4h-4z" for i in range(30))
-    b.append(f'<g class="gr"><path d="{gd}" fill="#fff"/></g>')
-    s="PRESS START"; b.append(f'<path class="bl" d="{tp(s,(W-tw(s,2))//2,G+18,2)}" fill="#fff"/>')
-    # enemies + coins (same track)
-    coins="".join(f'<g transform="translate({cx},{cy})"><path d="{sp(outline(COIN_A),-3,-3,3)}" fill="#000"/><path class="ca" d="{sp(COIN_A,0,0,3)}" fill="#fff"/><path class="cb" d="{sp(COIN_B,0,0,3)}" fill="#fff"/></g>'
-                  for cx,cy in [(-30,G-96),(6,G-106),(42,G-96)])
-    b.append(f'<g class="mov"><path d="{sp(outline(BUG),-4,G-28,4)}" fill="#000"/><path d="{sp(BUG,0,G-24,4)}" fill="#fff"/><g class="got">{coins}</g></g>')
-    px,py=96,G-56
-    b.append(f'<g class="dust"><rect class="fa" x="{px-10}" y="{G-8}" width="4" height="4" fill="#fff"/><rect class="fb" x="{px-18}" y="{G-12}" width="4" height="4" fill="#fff"/></g>')
-    b.append(f'<g class="jmp"><path d="{sp(outline(HEAD+LA),px-4,py-4,4)}" fill="#000"/><path d="{sp(outline(HEAD+LB),px-4,py-4,4)}" fill="#000"/><path d="{sp(HEAD,px,py,4)}" fill="#fff"/>'
-             f'<path class="fa" d="{sp(LA,px,py+44,4)}" fill="#fff"/><path class="fb" d="{sp(LB,px,py+44,4)}" fill="#fff"/></g>')
-    b.append(f'<g class="pts"><path d="{tp("+100",px,py-86,2)}" fill="#fff"/></g>')
-    b.append(f'<rect width="{W}" height="{H}" fill="url(#scan)" opacity=".5"/>')
-    return svg(W,H,"".join(b),css)
 
-# ============ 2. DIALOG ============
-def dialog():
-    W,H=900,200; p=3
-    b=[nbox(12,40,W-24,H-52)]
-    nw=tw(NAME,p)+24; b.append(f'<rect x="36" y="16" width="{nw}" height="{7*p+14}" fill="#fff"/><path d="{tp(NAME,48,23,p)}" fill="#000"/>')
-    # portrait
-    b.append(box(36,64,112,112,4)+f'<path d="{sp(FACE,48,76,5.5)}" fill="#fff"/>')
-    css=".blink{animation:blink 4s steps(1) infinite}@keyframes blink{0%,94%{opacity:1}95%,100%{opacity:0}}"
-    b.append(f'<path class="blink" d="{sp(EYES_TOP,48,76,5.5)}" fill="#fff"/><path d="{sp([r if i==7 else "."*16 for i,r in enumerate(EYES_OPEN)],48,76,5.5)}" fill="#fff"/>')
-    D=11.0; dt=.055; st=[.3]
-    for L in DIALOG: st.append(st[-1]+len(L)*dt+.35)
-    for i,L in enumerate(DIALOG):
-        y=78+i*32; x=176
-        kt=[0]+[(st[i]+k*dt)/D for k in range(len(L)+1)]+[10.5/D]; vals=[0]+[k*6*p for k in range(len(L)+1)]+[0]
-        b.append(f'<clipPath id="c{i}"><rect x="{x}" y="{y}" width="0" height="{7*p}"><animate attributeName="width" dur="{D}s" repeatCount="indefinite" calcMode="discrete" keyTimes="{";".join(f"{t:.4f}" for t in kt)}" values="{";".join(map(str,vals))}"/></rect></clipPath>'
-                 f'<path clip-path="url(#c{i})" d="{tp(L,x,y,p)}" fill="#fff"/>')
-    b.append(f'<path class="bl" d="M{W-56} {H-46}h16v4h-4v4h-4v4h-4v-4h-4v-4h-4z" fill="#fff"/>')
-    return svg(W,H,"".join(b),css)
+def n(v):
+    s = f"{v:.2f}".rstrip("0").rstrip(".")
+    return "0" if s in ("-0", "") else s
 
-# ============ 3. CHARACTER SELECT ============
-def select():
-    W,H=900,430
-    css=(".on{opacity:0;animation:on .01s forwards}@keyframes on{to{opacity:1}}"
-         ".bob{animation:bob 1.2s steps(1) infinite}@keyframes bob{50%{transform:translateY(5px)}}"
-         ".blink{animation:blink 4s steps(1) infinite}@keyframes blink{0%,94%{opacity:1}95%,100%{opacity:0}}")
-    b=['<defs><pattern id="d1" width="4" height="4" patternUnits="userSpaceOnUse"><rect width="2" height="2" fill="#fff"/><rect x="2" y="2" width="2" height="2" fill="#fff"/></pattern></defs>']
-    # portrait card
-    b.append(nbox(12,12,260,H-24))
-    b.append(f'<rect x="36" y="36" width="212" height="212" fill="url(#d1)"/><rect x="44" y="44" width="196" height="196" fill="#000"/>')
-    b.append(f'<g class="bob"><path d="{sp(outline(FACE),52,50,10)}" fill="#000"/><path d="{sp(FACE,62,60,10)}" fill="#fff"/>'
-             f'<path class="blink" d="{sp(EYES_TOP,62,60,10)}" fill="#fff"/><path d="{sp([r if i==7 else "."*16 for i,r in enumerate(EYES_OPEN)],62,60,10)}" fill="#fff"/></g>')
-    b.append(f'<rect x="36" y="36" width="44" height="30" fill="#fff"/><path d="{tp("P1",44,43,3)}" fill="#000"/>')
-    nm=NAME.split()[0]; b.append(f'<path d="{tp(nm,142-tw(nm,4)//2,272,4)}" fill="#fff"/>')
-    for k,(lab,val) in enumerate([("TYPE","HUMAN"),("MODE","CO-OP")]):
-        b.append(f'<path d="{tp(lab,40,330+k*24,2)}" fill="#fff"/><path d="{tp(val,244-tw(val,2),330+k*24,2)}" fill="#fff"/>')
-    # info panel
-    X=300; b.append(nbox(X,12,W-X-12,H-24))
-    b.append(f'<path d="{tp("CLASS",X+28,36,3)}" fill="url(#d1)"/><path d="{tp(CLASS,X+28+tw("CLASS ",3)+6,36,3)}" fill="#fff"/>')
-    s=f"LV.{LEVEL}"; b.append(f'<rect x="{W-40-tw(s,3)-16}" y="30" width="{tw(s,3)+16}" height="33" fill="#fff"/><path d="{tp(s,W-40-tw(s,3)-8,36,3)}" fill="#000"/>')
-    # HP / XP
-    y=78
-    for lab,full,anim in [("HP",1.0,False),("XP",.7,True)]:
-        b.append(f'<path d="{tp(lab,X+28,y,2)}" fill="#fff"/>'+box(X+64,y-3,W-X-116,20,2))
-        ww=int((W-X-124)*full)
-        if anim: b.append(f'<rect x="{X+68}" y="{y+1}" width="0" height="12" fill="url(#d1)"><animate attributeName="width" values="0;{ww}" dur="2s" begin=".3s" fill="freeze" calcMode="discrete" keyTimes="0;1"/><animate attributeName="width" from="0" to="{ww}" dur="1.6s" begin=".3s" fill="freeze"/></rect>')
-        else: b.append(f'<rect x="{X+68}" y="{y+1}" width="{ww}" height="12" fill="#fff"/>')
-        y+=26
-    b.append(f'<rect x="{X+28}" y="{y+2}" width="{W-X-68}" height="2" fill="url(#d1)"/>')
-    y+=20
-    for i,(lab,v) in enumerate(STATS):
-        yy=y+i*34; b.append(f'<path d="{tp(lab,X+28,yy,3)}" fill="#fff"/>')
-        for k in range(10):
-            sx=X+230+k*26
-            b.append(f'<rect x="{sx}" y="{yy-1}" width="20" height="23" fill="#fff"/><rect x="{sx+3}" y="{yy+2}" width="14" height="17" fill="#000"/>')
-            if k<v:
-                b.append(f'<rect class="on" style="animation-delay:{.4+i*.25+k*.07:.2f}s" x="{sx+3}" y="{yy+2}" width="14" height="17" fill="#fff"/>')
-        b.append(f'<path d="{tp(f"{v:02d}",X+500,yy,3)}" fill="#fff"/>')
-    b.append(f'<rect x="{W-48-tw("READY!",3)-12}" y="{H-62}" width="{tw("READY!",3)+24}" height="33" fill="#fff" class="bl"/><path d="{tp("READY!",W-48-tw("READY!",3),H-56,3)}" fill="#000"/>')
-    return svg(W,H,"".join(b),css)
 
-# ============ 4. INVENTORY ============
-def inventory():
-    W,H=900,280; S=76; gap=10; gx,gy=28,64; step=1.8; D=step*len(ITEMS)
-    b=['<defs><pattern id="d1" width="4" height="4" patternUnits="userSpaceOnUse"><rect width="2" height="2" fill="#fff"/><rect x="2" y="2" width="2" height="2" fill="#fff"/></pattern></defs>']
-    b.append(nbox(12,12,W-24,H-24))
-    b.append(f'<path d="{tp("ITEMS",32,32,3)}" fill="#fff"/><path d="{tp(f"{len(ITEMS)}/{len(ITEMS)}",32+tw("ITEMS ",3)+6,32,3)}" fill="url(#d1)"/>')
-    s="GOLD 999999"; b.append(f'<path d="{tp(s,W-32-tw(s,3),32,3)}" fill="#fff"/>')
-    pos=[]
-    for i,(lab,ic,*_) in enumerate(ITEMS):
-        c,r=i%5,i//5; x=gx+c*(S+gap); y=gy+r*(S+gap); pos.append((x,y))
-        b.append(box(x,y,S,S,3)+f'<path d="{sp(ICONS[ic],x+S//2-15,y+10,3)}" fill="#fff"/><path d="{tp(lab,x+S//2-tw(lab,2)//2,y+S-22,2)}" fill="#fff"/>')
-    vals=";".join(f"{x-6} {y-6}" for x,y in pos)
-    b.append(f'<g><animateTransform attributeName="transform" type="translate" values="{vals}" dur="{D}s" calcMode="discrete" repeatCount="indefinite"/>'
-             f'<rect x="3" y="3" width="{S+6}" height="{S+6}" fill="#fff" style="mix-blend-mode:difference"/>'
-             f'<path d="M0 0h20v6h-14v14h-6zM{S+12} 0v20h-6v-14h-14v-6zM0 {S+12}h20v-6h-14v-14h-6zM{S+12} {S+12}v-20h-6v14h-14v6z" fill="#fff"/></g>')
-    # description panel
-    PX=gx+5*(S+gap)+14; PW=W-PX-32; PY=gy; PH=2*S+gap
-    b.append(box(PX,PY,PW,PH,3))
-    items=[]
-    for i,(lab,ic,name,d1,d2,rar) in enumerate(ITEMS):
-        g=(f'<path d="{sp(ICONS[ic],PX+18,PY+18,5)}" fill="#fff"/>'
-           f'<path d="{tp(name[:18],PX+86,PY+22,2)}" fill="#fff"/>'
-           f'<path d="{tp("*"*rar,PX+86,PY+44,2)}" fill="#fff"/><path d="{tp("*"*(5-rar),PX+86+rar*12,PY+44,2)}" fill="url(#d1)"/>'
-           f'<rect x="{PX+18}" y="{PY+84}" width="{PW-36}" height="2" fill="url(#d1)"/>'
-           f'<path d="{tp(d1,PX+18,PY+98,2)}" fill="#fff"/><path d="{tp(d2,PX+18,PY+118,2)}" fill="#fff"/>')
-        items.append((g,i*step,(i+1)*step))
-    g,css=seq(items,D); b.append(g)
-    b.append(f'<path class="bl" d="{tp("} EQUIPPED",PX,H-44,2)}" fill="#fff"/>')
-    return svg(W,H,"".join(b),css)
+# ---------------- FONTS → PATHS ----------------
+# Le texte est vectorisé : GitHub n'affiche pas les polices web dans une image SVG.
+def font_file(key):
+    path = os.path.join(FONT_DIR, key + ".ttf")
+    if not os.path.exists(path):
+        os.makedirs(FONT_DIR, exist_ok=True)
+        print("téléchargement de la police", key)
+        urllib.request.urlretrieve(FONT_URLS[key], path)
+    return path
+
+
+def kern_lookups(font):
+    if "GPOS" not in font:
+        return []
+    gpos = font["GPOS"].table
+    indices = sorted({i for rec in gpos.FeatureList.FeatureRecord if rec.FeatureTag == "kern" for i in rec.Feature.LookupListIndex})
+    lookups = []
+    for i in indices:
+        lookup = gpos.LookupList.Lookup[i]
+        subtables = []
+        for sub in lookup.SubTable:
+            if lookup.LookupType == 9:
+                if sub.ExtensionLookupType != 2:
+                    continue
+                sub = sub.ExtSubTable
+            elif lookup.LookupType != 2:
+                continue
+            subtables.append((sub, {g: k for k, g in enumerate(sub.Coverage.glyphs)}))
+        if subtables:
+            lookups.append(subtables)
+    return lookups
+
+
+def pair_value(subtables, a, b):
+    for sub, coverage in subtables:
+        if a not in coverage:
+            continue
+        if sub.Format == 1:
+            for rec in sub.PairSet[coverage[a]].PairValueRecord:
+                if rec.SecondGlyph == b:
+                    return (getattr(rec.Value1, "XAdvance", 0) or 0) if rec.Value1 else 0
+            continue
+        c1 = sub.ClassDef1.classDefs.get(a, 0) if sub.ClassDef1 else 0
+        c2 = sub.ClassDef2.classDefs.get(b, 0) if sub.ClassDef2 else 0
+        value = sub.Class1Record[c1].Class2Record[c2].Value1
+        return (getattr(value, "XAdvance", 0) or 0) if value else 0
+    return 0
+
+
+class Face:
+    def __init__(self, key, wght=None):
+        font = TTFont(font_file(key))
+        if wght is not None and "fvar" in font:
+            font = instancer.instantiateVariableFont(font, {"wght": wght})
+        self.upm = font["head"].unitsPerEm
+        self.cmap = font.getBestCmap()
+        self.glyphs = font.getGlyphSet()
+        self.hmtx = font["hmtx"]
+        self.lookups = kern_lookups(font)
+        self.kerns = {}
+
+    def name(self, ch):
+        return self.cmap.get(ord(ch)) or self.cmap[ord("?")]
+
+    def kern(self, a, b):
+        if (a, b) not in self.kerns:
+            self.kerns[a, b] = sum(pair_value(subtables, a, b) for subtables in self.lookups)
+        return self.kerns[a, b]
+
+    def layout(self, text, size, track=0.0):
+        s = size / self.upm
+        names = [self.name(ch) for ch in text]
+        xs, x = [], 0.0
+        for i, g in enumerate(names):
+            xs.append(x)
+            x += self.hmtx[g][0] * s + track * size
+            if i + 1 < len(names):
+                x += self.kern(g, names[i + 1]) * s
+        return names, xs, (x - track * size if names else 0.0)
+
+    def width(self, text, size, track=0.0):
+        return self.layout(text, size, track)[2]
+
+    def d(self, text, x, y, size, track=0.0, anchor="start"):
+        names, xs, w = self.layout(text, size, track)
+        ox = x - {"start": 0, "middle": w / 2, "end": w}[anchor]
+        s = size / self.upm
+        out = []
+        for g, gx in zip(names, xs):
+            pen = SVGPathPen(self.glyphs, ntos=n)
+            self.glyphs[g].draw(TransformPen(pen, (s, 0, 0, -s, ox + gx, y)))
+            out.append(pen.getCommands())
+        return "".join(out)
+
+    def wrap(self, text, size, track, max_width):
+        lines, line = [], ""
+        for word in text.split():
+            test = f"{line} {word}".strip()
+            if line and self.width(test, size, track) > max_width:
+                lines.append(line)
+                line = word
+            else:
+                line = test
+        return lines + [line]
+
+
+LIGHT, REGULAR, MEDIUM = Face("outfit", 300), Face("outfit", 400), Face("outfit", 500)
+MONO, SCRIPT = Face("mono", 400), Face("script")
+
+
+def text(face, s, x, y, size, color, alpha=1, track=0.0, anchor="start", extra=""):
+    op = f' fill-opacity="{n(alpha)}"' if alpha < 1 else ""
+    return f'<path d="{face.d(s, x, y, size, track, anchor)}" fill="{color}"{op}{extra}/>'
+
+
+def kicker(s, x, y, color, alpha=1, anchor="start", size=10.5, track=0.22):
+    return text(MONO, s, x, y, size, color, alpha, track, anchor)
+
+
+# ---------------- PALETTE (tokens de genidraw-ui) ----------------
+def hsl(h, s, l):
+    r, g, b = colorsys.hls_to_rgb(h / 360, l / 100, s / 100)
+    return "#%02x%02x%02x" % tuple(round(v * 255) for v in (r, g, b))
+
+
+PRIMARY = hsl(33, 90, 48)
+THEMES = {
+    "light": dict(bg=hsl(40, 24, 98), fg=hsl(30, 12, 8), mfg=hsl(30, 6, 42), border=hsl(32, 12, 88),
+                  cover=hsl(30, 12, 8), hero="#1a1714", rim=None),
+    "dark":  dict(bg=hsl(30, 15, 5), fg=hsl(36, 18, 90), mfg=hsl(33, 8, 62), border=hsl(33, 8, 20),
+                  cover=hsl(30, 6, 13), hero="#0c0a09", rim="#ffffff"),
+}
+PAPER = hsl(36, 18, 90)   # encre claire posée sur les cartes sombres
+
+
+# ---------------- SVG ----------------
+_ids = [0]
+
+
+def uid():
+    _ids[0] += 1
+    return f"i{_ids[0]}"
+
+
+KEYFRAMES = ("@keyframes fin{from{opacity:0}}"
+             "@keyframes blink{50%{opacity:0}}"
+             "@keyframes spin{to{transform:rotate(360deg)}}"
+             "@keyframes spx{0%,100%{opacity:.15}30%{opacity:1}}"
+             "@keyframes head{0%,100%{opacity:.35}50%{opacity:1}}"
+             "@keyframes beat{0%,100%{opacity:1}50%{opacity:.55}}")
+
+
+def svg(w, h, body, label, css="", defs=""):
+    return (f'<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {w} {h}" role="img" aria-label="{label}">'
+            f'<title>{label}</title><style>{KEYFRAMES}{css}@media (prefers-reduced-motion:reduce){{*{{animation:none!important}}}}</style>'
+            f'<defs>{defs}</defs>{body}</svg>')
+
+
+def anim(name, dur, delay=0.0, extra="both"):
+    return f' style="animation:{name} {dur}s {extra} {n(delay)}s"'
+
+
+def sq(x, y, s):
+    return f"M{n(x)} {n(y)}h{n(s)}v{n(s)}h-{n(s)}z"
+
+
+def cells_d(cells, cell, gap=0.0, ox=0.0, oy=0.0):
+    return "".join(sq(ox + x * cell + gap, oy + y * cell + gap, cell - 2 * gap) for x, y in cells)
+
+
+def card(w, h, T, r=22, fill=None, rim=True):
+    stroke = f' stroke="{T["border"]}"' if rim else ""
+    return f'<rect x=".5" y=".5" width="{w - 1}" height="{h - 1}" rx="{r}" fill="{fill or T["bg"]}"{stroke}/>'
+
+
+# ---------------- ORNEMENT (rosace pixel de genidraw) ----------------
+ORN_PETAL = ["....333....", "...31123...", "...31123...", "....312...."]
+ORN_BUDS = [(1, 1, "5"), (2, 2, "6")]
+ORN_CENTER = ["444", "484", "444"]
+ORN_OPACITY = {"1": .45, "2": .7, "3": 1, "4": .18, "5": .4, "6": .65, "8": .9}
+
+
+def ornament_cells():
+    size = 11
+    grid = [["."] * size for _ in range(size)]
+
+    def place(x, y, tone):
+        column, row = x, y
+        for _ in range(4):
+            grid[row][column] = tone
+            column, row = size - 1 - row, column
+
+    for y, line in enumerate(ORN_PETAL):
+        for x, tone in enumerate(line):
+            if tone != ".":
+                place(x, y, tone)
+    for x, y, tone in ORN_BUDS:
+        place(x, y, tone)
+    for y, line in enumerate(ORN_CENTER):
+        for x, tone in enumerate(line):
+            grid[y + 4][x + 4] = tone
+    return [(x, y, grid[y][x]) for y in range(size) for x in range(size) if grid[y][x] != "."]
+
+
+def ornament(x, y, cell, color, bloom=None, alpha=1.0):
+    """bloom = délai (s) : les pixels s'allument anneau par anneau depuis le cœur."""
+    groups = {}
+    for cx, cy, tone in ornament_cells():
+        ring = max(abs(cx - 5), abs(cy - 5)) if bloom is not None else 0
+        groups.setdefault((ring, tone), []).append((cx, cy))
+    out = []
+    for (ring, tone), cells in sorted(groups.items()):
+        style = anim("fin", .5, bloom + ring * .12, "ease-out both") if bloom is not None else ""
+        out.append(f'<path d="{cells_d(cells, cell, 0, x, y)}" fill="{color}" fill-opacity="{n(ORN_OPACITY[tone] * alpha)}"{style}/>')
+    return f'<g shape-rendering="crispEdges">{"".join(out)}</g>'
+
+
+# ---------------- FLORE (portage de genidraw flora.ts) ----------------
+BLOSSOMS = [[".1.", "142", ".2."],
+            [".11.", "1142", "1222", ".23."],
+            [".112.", "11112", "11422", "12223", ".233."],
+            ["..11..", ".1112.", "111422", "112223", ".1223.", "..33.."]]
+LEAVES = [[".555..", "555566", "..666."], [".55...", "555666", ".5666.", "...66."]]
+FLORA_OPACITY = {1: .34, 2: .58, 3: .85, 4: .14, 5: .22, 6: .42, 7: .5}
+DITHERED = {1, 4, 5}
+M32 = 0xFFFFFFFF
+
+
+def mulberry(seed):
+    state = [seed & M32]
+
+    def nxt():
+        state[0] = (state[0] + 0x6D2B79F5) & M32
+        v = state[0]
+        v = ((v ^ (v >> 15)) * (v | 1)) & M32
+        v ^= (v + (((v ^ (v >> 7)) * (v | 61)) & M32)) & M32
+        return ((v ^ (v >> 14)) & M32) / 4294967296
+    return nxt
+
+
+def jsround(v):
+    return math.floor(v + .5)
+
+
+def rotate(sprite, turns):
+    for _ in range(turns % 4):
+        h, w = len(sprite), len(sprite[0])
+        sprite = ["".join(sprite[h - 1 - c][r] for c in range(h)) for r in range(w)]
+    return sprite
+
+
+def mirror(sprite):
+    return [row[::-1] for row in sprite]
+
+
+def grow_flora(size, seed, branches=4):
+    nxt = mulberry(seed)
+    grid = {}
+
+    def plot(x, y, tone):
+        if 0 <= x < size and 0 <= y < size:
+            grid[y * size + x] = tone
+
+    def stamp(sprite, cx, cy, shade):
+        top, left = jsround(cy - len(sprite) / 2), jsround(cx - len(sprite[0]) / 2)
+        for dy, row in enumerate(sprite):
+            for dx, ch in enumerate(row):
+                if ch == ".":
+                    continue
+                tone = int(ch)
+                if shade and tone <= 3:
+                    tone = min(3, tone + shade)
+                plot(left + dx, top + dy, tone)
+
+    blossoms, leaves = [], []
+
+    def cluster(x, y, count, spread, scale):
+        for _ in range(count):
+            angle = nxt() * math.pi * 2
+            radius = nxt() * spread
+            pick = min(len(BLOSSOMS) - 1, math.floor(nxt() * len(BLOSSOMS) * scale + (1 - scale)))
+            sprite = rotate(BLOSSOMS[pick], math.floor(nxt() * 4))
+            if nxt() > .5:
+                sprite = mirror(sprite)
+            blossoms.append((x + math.cos(angle) * radius, y + math.sin(angle) * radius, sprite, 1 if nxt() < .35 else 0))
+
+    for branch in range(branches):
+        base = .26 + (1.05 * (branch + .5)) / branches + (nxt() - .5) * .2
+        length = size * (.62 + nxt() * .36)
+        bend = (nxt() - .5) * .9
+        x, y = nxt() * 3, nxt() * 3
+        side = 1 if nxt() > .5 else -1
+        since_leaf = since_bloom = 0.0
+        travelled = 0.0
+        while travelled < length:
+            progress = travelled / length
+            heading = base + bend * progress
+            x += math.cos(heading) * .5
+            y += math.sin(heading) * .5
+            plot(jsround(x), jsround(y), 7)
+            if progress < .3:
+                plot(jsround(x) + 1, jsround(y), 7)
+            since_leaf += .5
+            since_bloom += .5
+            if since_leaf >= 6 + nxt() * 3 and progress > .08:
+                since_leaf = 0
+                normal = heading + side * math.pi / 2
+                turns = jsround((math.fmod(normal, math.pi * 2) + math.pi * 2) / (math.pi / 2)) % 4
+                sprite = rotate(LEAVES[math.floor(nxt() * len(LEAVES))], turns)
+                if nxt() > .5:
+                    sprite = mirror(sprite)
+                leaves.append((x + math.cos(normal) * 3, y + math.sin(normal) * 3, sprite))
+                side = -side
+            if progress > .3 and since_bloom >= 4 + nxt() * 4:
+                since_bloom = 0
+                cluster(x, y, 1 + math.floor(nxt() * 3), 3 + progress * 3, .5 + progress * .5)
+            travelled += .5
+        cluster(x, y, 4 + math.floor(nxt() * 3), 5, 1)
+
+    for lx, ly, sprite in leaves:
+        stamp(sprite, lx, ly, 0)
+    for bx, by, sprite, shade in blossoms:
+        if shade:
+            stamp(sprite, bx, by, 1)
+    for bx, by, sprite, shade in blossoms:
+        if not shade:
+            stamp(sprite, bx, by, 0)
+    cells = [(k % size, k // size, tone) for k, tone in grid.items()]
+    cells = [(x, y, tone, math.hypot(x, y) + nxt() * 4) for x, y, tone in cells]
+    return sorted(cells, key=lambda c: c[3])
+
+
+def flora(ink, corner, x0, y0, size=56, cell=6, seed=7, branches=4, grow=.3, alpha=1.0, soft=.8):
+    """Couche nette masquée depuis le coin + couche floue dessous, comme PixelFlora.tsx.
+    grow = délai (s) avant la pousse, None = déjà poussée."""
+    cells = grow_flora(size, seed, branches)
+    side = size * cell
+    flip_x, flip_y = corner.endswith("right"), corner.startswith("bottom")
+    steps = 16
+    groups = {}
+    for i, (x, y, tone, _) in enumerate(cells):
+        if tone in DITHERED and (x + y) % 2 == 1:
+            continue
+        px, py = (size - 1 - x if flip_x else x), (size - 1 - y if flip_y else y)
+        progress = 1 - math.sqrt(max(0.0, 1 - i / len(cells)))   # inverse de l'ease-out
+        bucket = min(steps - 1, int(progress * steps)) if grow is not None else 0
+        groups.setdefault((bucket, tone), []).append((px, py))
+    sharp = []
+    for (bucket, tone), group in sorted(groups.items()):
+        style = anim("fin", .45, grow + bucket / steps * 1.7, "ease-out both") if grow is not None else ""
+        sharp.append(f'<path d="{cells_d(group, cell, 1)}" fill="{ink}" fill-opacity="{FLORA_OPACITY[tone]}"{style}/>')
+    gid, mid, fid, lid = uid(), uid(), uid(), uid()
+    defs = (f'<radialGradient id="{gid}" gradientUnits="userSpaceOnUse" cx="{side if flip_x else 0}" cy="{side if flip_y else 0}" r="{n(side * 1.4142)}">'
+            f'<stop offset=".16" stop-color="#fff"/><stop offset=".64" stop-color="#fff" stop-opacity="0"/></radialGradient>'
+            f'<mask id="{mid}" maskUnits="userSpaceOnUse" x="0" y="0" width="{side}" height="{side}"><rect width="{side}" height="{side}" fill="url(#{gid})"/></mask>'
+            f'<filter id="{fid}" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation="7"/></filter>')
+    body = (f'<g transform="translate({n(x0)} {n(y0)})" opacity="{n(alpha)}">'
+            f'<use href="#{lid}" filter="url(#{fid})" opacity="{n(soft)}"/>'
+            f'<g mask="url(#{mid})"><g id="{lid}" shape-rendering="crispEdges">{"".join(sharp)}</g></g></g>')
+    return defs, body
+
+
+# ---------------- TRAME DEMI-TEINTE (PixelField « stepped ») ----------------
+STEP_SIDE, STEP_ALPHA = [0, .34, .56, .8], [0, .45, .7, 1]
+FIELD_PERIOD = 90   # colonnes : la trame boucle horizontalement pour pouvoir dériver
+
+
+def halftone(cols, rows, cell, color, intensity, phase=0.0):
+    k1, k3 = 2 * math.pi * 4 / FIELD_PERIOD, 2 * math.pi * 2 / FIELD_PERIOD
+    levels = {1: [], 2: [], 3: []}
+    for r in range(rows):
+        for c in range(cols):
+            wave = math.sin(c * k1 + phase) * math.cos(r * .24 - phase * .85) + math.sin((c + r) * k3 + phase * 1.4)
+            v = (wave + 2) / 4
+            if v < .52:
+                continue
+            size = (v - .52) / .48
+            level = 1 if size < .34 else 2 if size < .67 else 3
+            if level == 1 and (r + c) % 2 == 1:
+                continue
+            levels[level].append((c, r))
+    out = []
+    for level, cells in levels.items():
+        side = max(1, round(cell * STEP_SIDE[level]))
+        off = round((cell - side) / 2)
+        d = "".join(sq(c * cell + off, r * cell + off, side) for c, r in cells)
+        out.append(f'<path d="{d}" fill="{color}" fill-opacity="{n(STEP_ALPHA[level] * intensity)}"/>')
+    return "".join(out)
+
+
+def haze(x, y, w, h, color, cell=9, intensity=.55, focus=(1, 0), drift=True):
+    """Trame qui dérive d'une case par seconde, fondue en ellipse depuis un coin (CornerHaze)."""
+    cols, rows = -(-w // cell) + (FIELD_PERIOD if drift else 0), -(-h // cell)
+    gid, mid, fid, lid = uid(), uid(), uid(), uid()
+    fx, fy = x + focus[0] * w, y + focus[1] * h
+    defs = (f'<radialGradient id="{gid}" gradientUnits="userSpaceOnUse" cx="0" cy="0" r="1" gradientTransform="translate({n(fx)} {n(fy)}) scale({w} {h})">'
+            f'<stop offset=".12" stop-color="#fff"/><stop offset=".72" stop-color="#fff" stop-opacity="0"/></radialGradient>'
+            f'<mask id="{mid}" maskUnits="userSpaceOnUse" x="{x}" y="{y}" width="{w}" height="{h}"><rect x="{x}" y="{y}" width="{w}" height="{h}" fill="url(#{gid})"/></mask>'
+            f'<filter id="{fid}" x="-5%" y="-5%" width="110%" height="110%"><feGaussianBlur stdDeviation="5"/></filter>')
+    move = f' class="drift" style="animation:drift {FIELD_PERIOD}s steps({FIELD_PERIOD}) infinite"' if drift else ""
+    field = f'<g id="{lid}" shape-rendering="crispEdges"><g{move}>{halftone(cols, rows, cell, color, intensity)}</g></g>'
+    body = (f'<g mask="url(#{mid})"><g transform="translate({x} {y})">'
+            f'<use href="#{lid}" filter="url(#{fid})" opacity=".35"/>{field}</g></g>')
+    css = f"@keyframes drift{{to{{transform:translateX(-{FIELD_PERIOD * cell}px)}}}}"
+    return defs, body, css
+
+
+# ---------------- PETITS COMPOSANTS ----------------
+SPIN_STEPS = [0, 1, 2, 7, -1, 3, 6, 5, 4]
+
+
+def spinner(x, y, size, color, gap=1.0):
+    """PixelSpinner : 3×3 pixels qui s'allument en ronde autour du cœur."""
+    cell = (size - 2 * gap) / 3
+    out = []
+    for i, step in enumerate(SPIN_STEPS):
+        cx, cy = x + (i % 3) * (cell + gap), y + (i // 3) * (cell + gap)
+        base = f'x="{n(cx)}" y="{n(cy)}" width="{n(cell)}" height="{n(cell)}" rx=".5" fill="{color}"'
+        if step < 0:
+            out.append(f'<rect {base} fill-opacity=".25"/>')
+        else:
+            out.append(f'<rect {base} opacity=".45" style="animation:spx 1.2s ease-in-out {n((step - 8) * .15)}s infinite"/>')
+    return "".join(out)
+
+
+def segments(x, y, w, h, count, ratio, fg, gap=2.0, start=None, head=True):
+    """PixelProgress : barre segmentée, remplissage ambre, tête qui pulse."""
+    sw = (w - (count - 1) * gap) / count
+    filled = round(max(0, min(1, ratio)) * count)
+    rect = lambda i: f'x="{n(x + i * (sw + gap))}" y="{n(y)}" width="{n(sw)}" height="{h}" rx="1"'
+    out = [f'<rect {rect(i)} fill="{fg}" fill-opacity=".1"/>' for i in range(count)]
+    for i in range(filled):
+        style = anim("fin", .25, start + i * .035) if start is not None else ""
+        tone = .4 + .6 * (i + 1) / count   # dégradé en paliers vers la tête
+        out.append(f'<rect {rect(i)} fill="{PRIMARY}" fill-opacity="{n(tone)}"{style}/>')
+    if head and filled < count:
+        out.append(f'<rect {rect(filled)} fill="{PRIMARY}" opacity=".45" style="animation:head 1.1s ease-in-out infinite"/>')
+    return "".join(out)
+
+
+def rarity(x, y, value, fg, size=5.0, gap=2.0):
+    return "".join(f'<rect x="{n(x + i * (size + gap))}" y="{n(y)}" width="{size}" height="{size}" rx=".5" '
+                   f'fill="{PRIMARY if i < value else fg}"{"" if i < value else " fill-opacity=\".14\""}/>' for i in range(5))
+
+
+def crossfade(items, slot, fade=.5):
+    """items = fragments SVG qui se relaient en fondu ; le premier reste visible sans animation."""
+    total = slot * len(items)
+    css, out = "", []
+    for i, body in enumerate(items):
+        k = uid()
+        a, a2, b1, b = (i * slot / total * 100, (i * slot + fade) / total * 100,
+                        ((i + 1) * slot - fade) / total * 100, (i + 1) * slot / total * 100)
+        css += (f".{k}{{animation:{k} {n(total)}s linear infinite}}"
+                f"@keyframes {k}{{0%{{opacity:0}}{n(a)}%{{opacity:0}}{n(a2)}%{{opacity:1}}{n(b1)}%{{opacity:1}}{n(b)}%{{opacity:0}}100%{{opacity:0}}}}")
+        out.append(f'<g class="{k}"{"" if i == 0 else " opacity=\"0\""}>{body}</g>')
+    return "".join(out), css
+
+
+def circle_text(cx, cy, radius, s, face, size, track, color):
+    """Texte posé sur un cercle (CircleBadge), glyphe par glyphe."""
+    names, xs, w = face.layout(s, size, track)
+    scale = size / face.upm
+    full = w + track * size
+    extra = (2 * math.pi * radius - full) / len(names)
+    out = []
+    for i, g in enumerate(names):
+        gw = face.hmtx[g][0] * scale
+        theta = math.pi + (xs[i] + i * extra + gw / 2) / radius
+        phi = theta + math.pi / 2
+        c, sn = math.cos(phi), math.sin(phi)
+        ax, ay = cx + radius * math.cos(theta), cy + radius * math.sin(theta)
+        pen = SVGPathPen(face.glyphs, ntos=n)
+        face.glyphs[g].draw(TransformPen(pen, (scale * c, scale * sn, scale * sn, -scale * c, ax - gw / 2 * c, ay - gw / 2 * sn)))
+        out.append(pen.getCommands())
+    return f'<path d="{"".join(out)}" fill="{color}"/>'
+
+
+def arrow(cx, cy, size, color, width=1.6):
+    h = size / 2
+    return (f'<path d="M{n(cx - h)} {n(cy + h)}L{n(cx + h)} {n(cy - h)}M{n(cx - h * .6)} {n(cy - h)}H{n(cx + h)}V{n(cy + h * .6)}" '
+            f'stroke="{color}" stroke-width="{width}" stroke-linecap="round" stroke-linejoin="round" fill="none"/>')
+
+
+# ---------------- ICÔNES D'INVENTAIRE ----------------
+# Sprites à nuances (centrés dans une case 12×12) : '#' contour, '=' ton moyen, '-' ton clair, 'o' ambre.
+ICONS = {
+    'sword':  ["..........##", ".........#-#", "........#-#.", ".......#-#..", "......#-#...", "..o..#-#....",
+               "...o#-#.....", "....o#......", "...=.o......", "..=...o.....", ".#.........."],
+    'shield': [".##########.", "#=====-----#", "#=====-----#", "#====oo----#", "#===oooo---#", ".#===oo---#.",
+               ".#====----#.", "..#===---#..", "...#==--#...", "....#=-#....", ".....##....."],
+    'scroll': [".##########.", "#-========-#", ".##########.", "..#------#..", "..#-====-#..", "..#------#..",
+               "..#-oooo-#..", "..#------#..", "..#-===--#..", ".##########.", "#-========-#", ".##########."],
+    'gem':    ["...######...", "..#o-====#..", ".#--=-====#.", "############", ".#--=-====#.", "..#-=-===#..",
+               "...#-===#...", "....#-=#....", ".....##....."],
+    'ring':   ["....####....", "...#oooo#...", "....#oo#....", "...######...", "..##....##..", ".#=......-#.",
+               ".#=......-#.", ".#=......-#.", "..##....##..", "...######..."],
+    'potion': ["....####....", "....#==#....", "....####....", "....#--#....", "...#----#...", "..#------#..",
+               ".#--------#.", ".#oooooooo#.", ".#oo-ooooo#.", ".#ooooo-oo#.", "..#oooooo#..", "...######..."],
+    'hammer': [".########...", "#-=======#..", "#-=======##.", "#-=======#..", ".########...", "...#oo#.....",
+               "...#==#.....", "...#==#.....", "...#==#.....", "...#==#.....", "...#==#.....", "....##......"],
+    'key':    [".###........", "#-=-#.......", "#=.=########", "#=.=-oooooo#", "#-=-########", ".###...##.#.",
+               ".......#..#."],
+    'book':   [".#########..", "#o#------#..", "#o#-====-#..", "#o#------#..", "#o#-===--#..", "#o#------#..",
+               "#o#------#..", "#o########..", "#o#=======#.", ".##########."],
+    'bomb':   ["........o...", ".......=oo..", "......=.....", "....####....", "..########..", ".#--======#.",
+               ".#-=======#.", ".#========#.", ".#========#.", "..#======#..", "...######..."],
+}
+ICON_TONES = {"#": .88, "=": .5, "-": .24}
+
+
+def icon(name, x, y, cell, fg, box=12):
+    rows = ICONS[name]
+    w = max(len(row) for row in rows)
+    ox = x + (box - w) // 2 * cell
+    oy = y + (box - len(rows)) // 2 * cell
+    gap = cell * .1
+    out = []
+    for key, alpha in ICON_TONES.items():
+        cells = [(c, r) for r, row in enumerate(rows) for c, v in enumerate(row) if v == key]
+        out.append(f'<path d="{cells_d(cells, cell, gap, ox, oy)}" fill="{fg}" fill-opacity="{alpha}"/>')
+    accent = [(c, r) for r, row in enumerate(rows) for c, v in enumerate(row) if v == "o"]
+    out.append(f'<path d="{cells_d(accent, cell, gap, ox, oy)}" fill="{PRIMARY}"/>')
+    return f'<g shape-rendering="crispEdges">{"".join(out)}</g>'
+
+
+# ============ 1. HERO ============
+def hero(T):
+    W, H = 900, 440
+    clip = uid()
+    defs = [f'<clipPath id="{clip}"><rect width="{W}" height="{H}" rx="28"/></clipPath>']
+    glow, cool = uid(), uid()
+    defs.append(f'<radialGradient id="{glow}" gradientUnits="userSpaceOnUse" cx="0" cy="0" r="1" gradientTransform="translate(760 500) scale(520 380)">'
+                f'<stop offset="0" stop-color="{PRIMARY}" stop-opacity=".30"/><stop offset="1" stop-color="{PRIMARY}" stop-opacity="0"/></radialGradient>'
+                f'<radialGradient id="{cool}" gradientUnits="userSpaceOnUse" cx="0" cy="0" r="1" gradientTransform="translate(60 -40) scale(560 360)">'
+                f'<stop offset="0" stop-color="#8fa7c4" stop-opacity=".16"/><stop offset="1" stop-color="#8fa7c4" stop-opacity="0"/></radialGradient>')
+    b = [f'<rect width="{W}" height="{H}" fill="{T["hero"]}"/><rect width="{W}" height="{H}" fill="url(#{cool})"/><rect width="{W}" height="{H}" fill="url(#{glow})"/>']
+    hd, hb, css = haze(350, 0, 550, 280, "#fff", cell=9, intensity=.42)
+    defs.append(hd); b.append(hb)
+    fd, fb = flora(PAPER, "bottom-right", W - 316, H - 316, size=56, cell=6, seed=4, grow=.6, alpha=.8, soft=.35)
+    defs.append(fd); b.append(fb)
+    # barre du haut
+    b.append(f'<rect x="32" y="26" width="28" height="28" rx="8" fill="{PRIMARY}"/>'
+             + text(MEDIUM, FIRST[0], 46, 45.5, 15, "#fbfaf8", anchor="middle")
+             + text(REGULAR, f"{FIRST.title()} {LAST.title()}", 72, 45.5, 16, "#fff", track=-.01))
+    sw = MONO.width(STATUS, 10, .2)
+    px = W - 50 - sw - 22 - 16
+    b.append(f'<rect x="{n(px)}" y="22.5" width="{n(W - 34 - px)}" height="35" rx="17.5" fill="{T["hero"]}" fill-opacity=".62" stroke="#fff" stroke-opacity=".14"/>'
+             + spinner(px + 16, 34, 12, PRIMARY) + kicker(STATUS, W - 50, 44, "#fff", .8, "end", 10, .2))
+    # nom en capitales fines + mot manuscrit qui tourne
+    size, x0, y1 = 132, 26, 200
+    kw = LIGHT.width(FIRST, size, -.045)
+    b.append(text(LIGHT, FIRST, x0, y1, size, "#fff", track=-.045, extra=anim("fin", .9, .15, "cubic-bezier(.16,1,.3,1) both")))
+    b.append(text(REGULAR, "©", x0 + kw + 8, y1 - size * .56, 20, "#fff", .7))
+    b.append(text(LIGHT, LAST, x0 + 84, y1 + 106, size, "#fff", .55, track=-.045, extra=anim("fin", .9, .3, "cubic-bezier(.16,1,.3,1) both")))
+    roles, c = crossfade([text(SCRIPT, r, x0 + 236, y1 + 134, 64, "#fff") for r in ROLES], 3.2, .6)
+    b.append(roles); css += c
+    # badge circulaire
+    cx, cy = 780, 150
+    b.append(f'<g style="transform-origin:{cx}px {cy}px;animation:spin 48s linear infinite">'
+             + circle_text(cx, cy, 50, BADGE, MEDIUM, 9.4, .12, "#fff") + '</g>'
+             + ornament(cx - 16.5, cy - 16.5, 3, "#fff", bloom=.8))
+    for i, line in enumerate(NOTE):
+        b.append(kicker(line, 836, 240 + i * 16, "#fff", .8, "end", 10, .16))
+    # bas gauche
+    b.append(kicker(KICKER, 36, H - 72, "#fff", .7))
+    b.append(text(LIGHT, CLAIM, 34, H - 38, 24, "#fff", track=-.01))
+    if T["rim"]:
+        b.append(f'<rect x=".5" y=".5" width="{W - 1}" height="{H - 1}" rx="28" fill="none" stroke="#fff" stroke-opacity=".1"/>')
+    body = f'<g clip-path="url(#{clip})">{"".join(b)}</g>'
+    return svg(W, H, body, f"{FIRST} {LAST} — {', '.join(r.upper() for r in ROLES)}", css, "".join(defs))
+
+
+# ============ 2. SÉPARATEUR ============
+def divider(T, left, right):
+    W, H, cx = 900, 118, 450
+    b = [kicker(left, cx - 40, 40, T["fg"], .8, "end", 11),
+         ornament(cx - 22, 12, 4, T["fg"], bloom=.2),
+         kicker(right, cx + 40, 40, T["fg"], .8, "start", 11),
+         f'<rect x="{cx - .5}" y="76" width="1" height="42" fill="{T["fg"]}" fill-opacity=".25" style="transform-origin:{cx}px 76px;animation:grow .9s cubic-bezier(.16,1,.3,1) .6s both"/>']
+    return svg(W, H, "".join(b), f"{left} — {right}", "@keyframes grow{from{transform:scaleY(0)}}")
+
+
+# ============ 3. PROFIL ============
+def profile(T):
+    W, P = 900, 32
+    fg, mfg = T["fg"], T["mfg"]
+    b = [kicker(f"PLAYER 1 — {CLASS}", P, 46, mfg)]
+    lv = f"LV. {LEVEL}"
+    lw = MONO.width(lv, 10.5, .18) + 28
+    b.append(f'<rect x="{n(W - P - lw)}" y="26" width="{n(lw)}" height="28" rx="14" fill="none" stroke="{T["border"]}"/>'
+             + kicker(lv, W - P - 14, 44.5, fg, 1, "end", 10.5, .18))
+    size, lead, y = 27, 35, 98
+    b.append(text(LIGHT, HELLO, P - 1, y, size, fg, track=-.01))
+    lines = INTRO
+    for i, line in enumerate(lines):
+        b.append(text(LIGHT, line, P - 1, y + (i + 1) * lead, size, mfg, track=-.01))
+    last = y + len(lines) * lead
+    caret_x = P + LIGHT.width(lines[-1], size, -.01) + 6
+    b.append(f'<rect x="{n(caret_x)}" y="{last - 20}" width="10" height="22" fill="{PRIMARY}" style="animation:blink 1.1s steps(1) infinite"/>')
+    # compteurs (grille à filets, comme Stats de genidraw)
+    gy, gh, gw = last + 30, 104, (W - 2 * P) / len(COUNTERS)
+    b.append(f'<rect x="{P + .5}" y="{gy + .5}" width="{W - 2 * P - 1}" height="{gh - 1}" rx="16" fill="none" stroke="{T["border"]}"/>')
+    for i, (value, label) in enumerate(COUNTERS):
+        x = P + i * gw
+        if i:
+            b.append(f'<rect x="{n(x)}" y="{gy + 1}" width="1" height="{gh - 2}" fill="{T["border"]}"/>')
+        b.append(text(LIGHT, value, x + 22, gy + 56, 44, fg, track=-.03, extra=anim("fin", .6, .2 + i * .08, "ease-out both")))
+        b.append(kicker(label, x + 23, gy + 84, mfg, 1, "start", 10, .2))
+    # stats en barres segmentées
+    sy, col = gy + gh + 42, (W - 2 * P - 40) / 2
+    for i, (label, value) in enumerate(STATS):
+        x, y = P + (i % 2) * (col + 40), sy + (i // 2) * 42
+        b.append(kicker(label, x, y, mfg, 1, "start", 10, .2) + kicker(f"{value:02d}/10", x + col, y, fg, 1, "end", 10, .1))
+        b.append(segments(x, y + 10, col, 6, 28, value / 10, fg, start=.5 + i * .15))
+    H = sy + (len(STATS) + 1) // 2 * 42 + 2
+    return svg(W, H, card(W, H, T) + "".join(b), f"Player 1 — {CLASS}, level {LEVEL}. {HELLO} {' '.join(INTRO)}")
+
+
+# ============ 4. INVENTAIRE ============
+def stack(T):
+    W, cols = 900, 5
+    cw, ch = W / cols, 162
+    rows = -(-len(ITEMS) // cols)
+    H = rows * ch
+    fg, mfg = T["fg"], T["mfg"]
+    clip = uid()
+    b = [card(W, H, T)]
+    for c in range(1, cols):
+        b.append(f'<rect x="{n(c * cw)}" y="1" width="1" height="{H - 2}" fill="{T["border"]}"/>')
+    for r in range(1, rows):
+        b.append(f'<rect x="1" y="{r * ch}" width="{W - 2}" height="1" fill="{T["border"]}"/>')
+    # curseur : la case active s'éclaire à tour de rôle
+    step = 2.2
+    vals = ";".join(f"{n((i % cols) * cw)} {(i // cols) * ch}" for i in range(len(ITEMS)))
+    b.append(f'<g clip-path="url(#{clip})"><g><animateTransform attributeName="transform" type="translate" values="{vals}" '
+             f'dur="{n(step * len(ITEMS))}s" calcMode="discrete" repeatCount="indefinite"/>'
+             f'<rect x="1" y="1" width="{n(cw - 1)}" height="{ch - 1}" fill="{PRIMARY}" fill-opacity=".07"/>'
+             f'<path d="M12 12h10v2h-8v8h-2zM{n(cw - 12)} 12v10h-2v-8h-8v-2zM12 {ch - 12}h10v-2h-8v-8h-2zM{n(cw - 12)} {ch - 12}v-10h-2v8h-8v2z" fill="{PRIMARY}"/></g></g>')
+    for i, (name, ic, d1, d2, rar) in enumerate(ITEMS):
+        x, y = (i % cols) * cw, (i // cols) * ch
+        b.append(icon(ic, x + 22, y + 22, 4, fg))
+        b.append(rarity(x + cw - 24 - 33, y + 28, rar, fg))
+        b.append(text(REGULAR, name, x + 23, y + 104, 18, fg, track=-.01))
+        b.append(kicker(d1, x + 24, y + 126, mfg, 1, "start", 8.6, .12) + kicker(d2, x + 24, y + 140, mfg, 1, "start", 8.6, .12))
+    defs = f'<clipPath id="{clip}"><rect width="{W}" height="{H}" rx="22"/></clipPath>'
+    return svg(W, H, "".join(b), "Inventory: " + ", ".join(item[0] for item in ITEMS), defs=defs)
+
 
 # ============ 5. NOW PLAYING ============
-def player():
-    random.seed(9); W,H=900,230
-    css=(".r1{animation:bl .5s steps(1) infinite}.r2{animation:bl .5s steps(1) infinite;animation-delay:.25s}"
-         ".beat{animation:beat .333s steps(1) infinite}@keyframes beat{50%{transform:scale(.8)}}"
-         ".mq{animation:mq 14s linear infinite}@keyframes mq{from{transform:translateX(0)}to{transform:translateX(-"+str(tw(TRACK+"   ",3)+18)+"px)}}"
-         ".ph{animation:ph 60s steps(60) infinite}@keyframes ph{to{transform:translateX(560px)}}")
-    b=['<defs><pattern id="d1" width="4" height="4" patternUnits="userSpaceOnUse"><rect width="2" height="2" fill="#fff"/><rect x="2" y="2" width="2" height="2" fill="#fff"/></pattern>'
-       '<pattern id="seg" width="4" height="4" patternUnits="userSpaceOnUse"><rect width="4" height="2" fill="#fff"/></pattern>'
-       '<clipPath id="mqc"><rect x="276" y="40" width="596" height="34"/></clipPath></defs>']
-    b.append(nbox(12,12,W-24,H-24))
-    # cassette
-    cx,cy=36,36; b.append(box(cx,cy,212,136,4)+f'<rect x="{cx+16}" y="{cy+14}" width="180" height="26" fill="#fff"/><path d="{tp("SIDE A * 180",cx+106-tw("SIDE A * 180",2)//2,cy+20,2)}" fill="#000"/>')
-    b.append(box(cx+30,cy+52,152,48,3))
-    for k,rx in enumerate((cx+66,cx+146)):
-        b.append(f'<circle cx="{rx}" cy="{cy+76}" r="16" fill="#fff"/><circle cx="{rx}" cy="{cy+76}" r="10" fill="#000"/>'
-                 f'<path class="r1" d="M{rx-2} {cy+66}h4v20h-4z" fill="#fff"/><path class="r2" d="M{rx-10} {cy+74}h20v4h-20z" fill="#fff"/>')
-    b.append(f'<path d="M{cx+50} {cy+136}l12 -18h88l12 18z" fill="#fff"/><rect x="{cx+76}" y="{cy+124}" width="8" height="6" fill="#000"/><rect x="{cx+128}" y="{cy+124}" width="8" height="6" fill="#000"/>')
-    # marquee
-    b.append(box(272,36,604,42,3))
-    t=TRACK+"   "; b.append(f'<g clip-path="url(#mqc)"><g class="mq"><path d="{tp(t,286,47,3)}" fill="#fff"/><path d="{tp(t,286+tw(t,3)+18,47,3)}" fill="#fff"/></g></g>')
-    # progress
-    b.append(f'<rect x="276" y="96" width="580" height="4" fill="url(#d1)"/><g class="ph"><rect x="276" y="90" width="12" height="16" fill="#fff"/></g>')
-    b.append(f'<path d="{tp("03",276,118,3)}" fill="#fff"/><path class="bl" d="{tp(":",276+tw("03",3)+2,118,3)}" fill="#fff"/><path d="{tp("07",276+tw("03:",3)+6,118,3)}" fill="#fff"/>')
-    # BPM
-    b.append(f'<g transform="translate(470 126)"><g class="beat" style="transform-origin:15px 12px"><path d="{sp(F["*"],0,-7,6)}" fill="#fff"/></g></g><path d="{tp("180 BPM",510,118,3)}" fill="#fff"/>')
-    # buttons
-    bx=276; by=154
-    icons=[ "M6 6h4v20h-4zM26 6v20l-14 -10z", "M8 6l18 10l-18 10z", "M8 6h6v20h-6zM18 6h6v20h-6z", "M6 6v20l14 -10zM22 6h4v20h-4z"]
-    for k,d in enumerate(icons):
-        x=bx+k*44
-        if k==1: b.append(f'<rect x="{x}" y="{by}" width="32" height="32" fill="#fff"/><path d="{d}" transform="translate({x} {by})" fill="#000"/>')
-        else: b.append(box(x,by,32,32,2)+f'<path d="{d}" transform="translate({x} {by})" fill="#fff"/>')
-    # mini EQ
-    ex=470; n=24
-    for i in range(n):
-        hs=[random.randrange(1,9)*4 for _ in range(8)]; hs.append(hs[0]); dur=random.choice([.66,.99,1.33])
-        b.append(f'<rect x="{ex+i*16}" y="{190-hs[0]}" width="12" height="{hs[0]}" fill="url(#seg)"><animate attributeName="height" values="{";".join(map(str,hs))}" dur="{dur}s" calcMode="discrete" repeatCount="indefinite"/><animate attributeName="y" values="{";".join(str(190-h) for h in hs)}" dur="{dur}s" calcMode="discrete" repeatCount="indefinite"/></rect>')
-    return svg(W,H,"".join(b),css)
+def flipbook(items, dur):
+    """Images qui se succèdent sans fondu ; la première reste affichée sans animation."""
+    css, out = "", []
+    for i, body in enumerate(items):
+        k, a, b = uid(), i / len(items) * 100, (i + 1) / len(items) * 100
+        frames = f"0%{{opacity:1}}{n(b)}%{{opacity:0}}100%{{opacity:0}}" if i == 0 else \
+                 f"0%{{opacity:0}}{n(a)}%{{opacity:1}}{n(b)}%{{opacity:0}}100%{{opacity:0}}"
+        css += f".{k}{{animation:{k} {n(dur)}s step-end infinite}}@keyframes {k}{{{frames}}}"
+        out.append(f'<g class="{k}"{"" if i == 0 else " opacity=\"0\""}>{body}</g>')
+    return "".join(out), css
 
-# ============ 6. GAME OVER / CONTINUE ============
-def gameover():
-    W,H=900,240; D=12
-    b=['<defs><pattern id="d1" width="4" height="4" patternUnits="userSpaceOnUse"><rect width="2" height="2" fill="#fff"/><rect x="2" y="2" width="2" height="2" fill="#fff"/></pattern>'
-       '<pattern id="scan" width="4" height="4" patternUnits="userSpaceOnUse"><rect y="3" width="4" height="1" fill="#000"/></pattern></defs>']
-    items=[]
-    s="CONTINUE ?"; p=6
-    cont=f'<path d="{tp(s,(W-tw(s,p))//2+4,44,p)}" fill="url(#d1)"/><path d="{tp(s,(W-tw(s,p))//2,40,p)}" fill="#fff"/>'
-    for n in range(9,-1,-1):
-        t=9-n; d=str(n); p=12
-        items.append((cont+f'<path d="{tp(d,(W-tw(d,p))//2+6,108,p)}" fill="url(#d1)"/><path d="{tp(d,(W-tw(d,p))//2,102,p)}" fill="#fff"/>', t, t+1))
-    s="GAME OVER"; p=10
-    items.append((f'<path d="{tp(s,(W-tw(s,p))//2+6,86,p)}" fill="url(#d1)"/><path d="{tp(s,(W-tw(s,p))//2,80,p)}" fill="#fff"/>',10,12))
-    g,css=seq(items,D); b.append(g)
-    b.append(f'<rect x="24" y="200" width="{W-48}" height="2" fill="url(#d1)"/>')
-    b.append(f'<path class="bl" d="{tp("INSERT COIN",24,212,2)}" fill="#fff"/>')
-    s="CREDITS 00"; b.append(f'<path d="{tp(s,W-24-tw(s,2),212,2)}" fill="#fff"/>')
-    b.append(f'<rect width="{W}" height="{H}" fill="url(#scan)" opacity=".35"/>')
-    return svg(W,H,"".join(b),css)
 
-# ============ 7. HEADERS + DIVIDER ============
-def header(label):
-    p=4; w=tw("} "+label,p)+48; h=7*p+28
-    b=(f'<rect x="8" y="8" width="{w}" height="{h}" fill="url(#hd)"/><rect width="{w}" height="{h}" fill="#000"/>'+box(0,0,w,h,4)+
-       f'<path class="bl" d="{tp("}",24,14,p)}" fill="#fff"/><path d="{tp(label,24+12*p,14,p)}" fill="#fff"/>')
-    return (f'<svg xmlns="http://www.w3.org/2000/svg" width="{w+8}" height="{h+8}" viewBox="0 0 {w+8} {h+8}" shape-rendering="crispEdges">'
-            f'<style>{BASE_CSS}</style><defs><pattern id="hd" width="4" height="4" patternUnits="userSpaceOnUse"><rect width="2" height="2" fill="#000"/><rect x="2" y="2" width="2" height="2" fill="#000"/></pattern></defs>{b}</svg>')
-def divider():
-    W,H=900,28
-    d="".join(f"M{i*16} 12h8v4h-8z" for i in range(60))
-    css=".mv{animation:mv .6s linear infinite}@keyframes mv{to{transform:translateX(-16px)}}"
-    b=(f'<g class="mv"><path d="{d}" fill="#fff"/></g><rect x="{W//2-44}" y="0" width="88" height="{H}" fill="#000"/>'
-       f'<path class="bl" d="{tp("* * *",W//2-tw("* * *",2)//2,7,2)}" fill="#fff"/>')
-    return svg(W,H,b,css)
+def vinyl(x, y, cell=5, grid=27):
+    mid = grid // 2
+    grooves, label, rim = {.09: [], .16: []}, [], []
+    polar = []
+    for r in range(grid):
+        for c in range(grid):
+            d = math.hypot(c - mid, r - mid)
+            if d <= 1.1 or d > 13.4:
+                continue
+            if d <= 4.3:
+                label.append((c, r))
+            elif d > 12.4:
+                rim.append((c, r))
+            else:
+                grooves[.09 if round(d) % 2 else .16].append((c, r))
+                if 5.5 <= d <= 12:
+                    polar.append((c, r, math.atan2(r - mid, c - mid)))
+    gap = .5
+    body = "".join(f'<path d="{cells_d(cells, cell, gap, x, y)}" fill="{PAPER}" fill-opacity="{a}"/>' for a, cells in grooves.items())
+    body += f'<path d="{cells_d(rim, cell, gap, x, y)}" fill="{PAPER}" fill-opacity=".3"/>'
+    frames = []
+    for k in range(12):
+        theta = k * math.pi / 12
+        cells = [(c, r) for c, r, a in polar if abs(math.remainder(a - theta, math.pi)) < .2]
+        frames.append(f'<path d="{cells_d(cells, cell, gap, x, y)}" fill="{PAPER}" fill-opacity=".34"/>')
+    glint, css = flipbook(frames, 3)
+    body += glint + (f'<path d="{cells_d(label, cell, gap, x, y)}" fill="{PRIMARY}" '
+                     f'style="animation:beat .333s steps(1) infinite"/>')
+    return f'<g shape-rendering="crispEdges">{body}</g>', css
 
-os.makedirs(OUT,exist_ok=True)
-files={"banner":banner(),"dialog":dialog(),"select":select(),"inventory":inventory(),"player":player(),"gameover":gameover(),"divider":divider()}
-for k,lab in [("player1","PLAYER 1"),("inventory","INVENTORY"),("scores","HIGH SCORES"),("music","NOW PLAYING"),("bonus","BONUS STAGE"),("continue","CONTINUE ?")]:
-    files["h-"+k]=header(lab)
-for k,v in files.items(): open(os.path.join(OUT,k+".svg"),"w").write(v)
-print("OK:",", ".join(files))
+
+def player(T):
+    W, H = 900, 206
+    fg, mfg = T["fg"], T["mfg"]
+    b = [card(W, H, T)]
+    # pochette : vinyle pixel, reflet qui tourne, étiquette ambre qui bat à 180 BPM
+    cs, cx, cy = 155, 26, 26
+    clip = uid()
+    disc, spin_css = vinyl(cx + 10, cy + 10)
+    b.append(f'<g clip-path="url(#{clip})"><rect x="{cx}" y="{cy}" width="{cs}" height="{cs}" fill="{T["cover"]}"/>{disc}</g>')
+    defs = f'<clipPath id="{clip}"><rect x="{cx}" y="{cy}" width="{cs}" height="{cs}" rx="16"/></clipPath>'
+    x0 = cx + cs + 30
+    b.append(spinner(x0, 38, 11, PRIMARY) + kicker("NOW PLAYING", x0 + 20, 47.5, mfg))
+    b.append(text(LIGHT, TRACK[0], x0 - 1, 94, 32, fg, track=-.015))
+    b.append(kicker(TRACK[1], x0, 120, mfg, 1, "start", 10, .16))
+    # égaliseur pixel
+    ex, base, sq_s, gap = W - 30 - 16 * 11 + 4, 96, 7, 4
+    pid, mid, gid = uid(), uid(), uid()
+    defs += (f'<pattern id="{pid}" width="{sq_s + gap}" height="{sq_s + gap}" patternUnits="userSpaceOnUse" x="{ex}" y="{base}">'
+             f'<rect width="{sq_s}" height="{sq_s}" rx="1" fill="{fg}"/></pattern>'
+             f'<linearGradient id="{gid}" x1="0" y1="{base}" x2="0" y2="{base - 66}" gradientUnits="userSpaceOnUse">'
+             f'<stop offset="0" stop-color="#fff" stop-opacity=".85"/><stop offset="1" stop-color="#fff" stop-opacity=".18"/></linearGradient>'
+             f'<mask id="{mid}"><rect x="{ex - 2}" y="{base - 70}" width="200" height="72" fill="url(#{gid})"/></mask>')
+    bars = []
+    rng = mulberry(9)
+    for i in range(16):
+        hs = [(1 + math.floor(rng() * 6)) * (sq_s + gap) for _ in range(8)]
+        hs.append(hs[0])
+        dur = [.666, 1.0, 1.333][math.floor(rng() * 3)]
+        bx = ex + i * (sq_s + gap)
+        bars.append(f'<rect x="{bx}" y="{base - hs[0] + gap}" width="{sq_s}" height="{hs[0] - gap}" fill="url(#{pid})">'
+                    f'<animate attributeName="height" values="{";".join(str(h - gap) for h in hs)}" dur="{dur}s" calcMode="discrete" repeatCount="indefinite"/>'
+                    f'<animate attributeName="y" values="{";".join(str(base - h + gap) for h in hs)}" dur="{dur}s" calcMode="discrete" repeatCount="indefinite"/></rect>')
+    b.append(f'<g mask="url(#{mid})" shape-rendering="crispEdges">{"".join(bars)}</g>')
+    # progression
+    py, pw = 150, W - 30 - x0
+    count = 56
+    sw = (pw - (count - 1) * 2) / count
+    track = "".join(f'<rect x="{n(x0 + i * (sw + 2))}" y="{py}" width="{n(sw)}" height="6" rx="1"/>' for i in range(count))
+    tid = uid()
+    defs += f'<clipPath id="{tid}">{track}</clipPath>'
+    b.append(f'<g fill="{fg}" fill-opacity=".1">{track}</g>'
+             f'<rect x="{x0}" y="{py}" width="0" height="6" fill="{PRIMARY}" clip-path="url(#{tid})">'
+             f'<animate attributeName="width" values="{n(pw * .05)};{n(pw)}" dur="90s" calcMode="linear" repeatCount="indefinite"/></rect>')
+    b.append(kicker("SIDE A", x0, py + 32, mfg, 1, "start", 10, .16) + kicker("60:00", W - 30, py + 32, mfg, 1, "end", 10, .16))
+    heart = [".#.#.", "#####", "#####", ".###.", "..#.."]
+    hx = x0 + pw / 2 - 40
+    hc = [(c, r) for r, row in enumerate(heart) for c, v in enumerate(row) if v == "#"]
+    b.append(f'<path d="{cells_d(hc, 2.4, .2, hx, py + 20.5)}" fill="{PRIMARY}" shape-rendering="crispEdges" style="animation:beat .333s steps(1) infinite"/>'
+             + kicker("180 BPM", hx + 20, py + 32, fg, 1, "start", 10, .16))
+    return svg(W, H, "".join(b), f"Now playing: {TRACK[0].title()} — {TRACK[1].title()}", spin_css, defs)
+
+
+# ============ 6. FIN / CONTACT ============
+def outro(T):
+    W, H = 900, 340
+    clip = uid()
+    defs = [f'<clipPath id="{clip}"><rect width="{W}" height="{H}" rx="28"/></clipPath>']
+    glow = uid()
+    defs.append(f'<radialGradient id="{glow}" gradientUnits="userSpaceOnUse" cx="0" cy="0" r="1" gradientTransform="translate(140 380) scale(520 300)">'
+                f'<stop offset="0" stop-color="{PRIMARY}" stop-opacity=".18"/><stop offset="1" stop-color="{PRIMARY}" stop-opacity="0"/></radialGradient>')
+    b = [f'<rect width="{W}" height="{H}" fill="{T["hero"]}"/><rect width="{W}" height="{H}" fill="url(#{glow})"/>']
+    fd, fb = flora(PAPER, "top-right", W - 336 - 110, -20, size=56, cell=6, seed=37, grow=.4, alpha=.8, soft=.35)
+    defs.append(fd); b.append(fb)
+    b.append(kicker("CONTINUE ? — PRESS START", 40, 70, "#fff", .5))
+    size = 60
+    b.append(text(LIGHT, OUTRO[0], 37, 142, size, "#fff", track=-.025))
+    b.append(text(LIGHT, OUTRO[1], 37 + 70, 204, size, "#fff", .55, track=-.025))
+    b.append(text(SCRIPT, OUTRO[2], 37 + 290, 236, 58, "#fff"))
+    b.append(f'<rect x="40" y="{H - 64}" width="{W - 80}" height="1" fill="#fff" fill-opacity=".12"/>')
+    b.append(kicker(f"© {datetime.date.today().year} {FIRST} {LAST}", 40, H - 30, "#fff", .4, "start", 10, .2))
+    digits, c = crossfade([kicker(f"CONTINUE ? {k}", W - 40, H - 30, "#fff", .55, "end", 10, .2) for k in range(9, -1, -1)], 1, .05)
+    b.append(spinner(W - 40 - MONO.width("CONTINUE ? 9", 10, .2) - 22, H - 40, 11, PRIMARY) + digits)
+    if T["rim"]:
+        b.append(f'<rect x=".5" y=".5" width="{W - 1}" height="{H - 1}" rx="28" fill="none" stroke="#fff" stroke-opacity=".1"/>')
+    return svg(W, H, f'<g clip-path="url(#{clip})">{"".join(b)}</g>', f"{OUTRO[0]} {OUTRO[1]} {OUTRO[2]}", c, "".join(defs))
+
+
+def button(T, label, delay):
+    """Bouton pilule façon CTA genidraw, avec le balayage de pixels PixelHover en boucle."""
+    h, pad, dot = 52, 24, 38
+    tw = MEDIUM.width(label, 13, .08)
+    w = round(pad + tw + 18 + dot + 7)
+    light = T is THEMES["light"]
+    fill, ink = (T["fg"], T["bg"]) if light else ("#ffffff", "#171717")
+    clip = uid()
+    cell, cols, rows = 4, -(-w // 4), -(-h // 4)
+    rng = mulberry(len(label) * 31 + 7)
+    buckets = {}
+    for r in range(rows):
+        for c in range(cols):
+            delay_frac = min(1, max(0, c / (cols - 1) + (rng() - .5) * .7))
+            buckets.setdefault(round(delay_frac * 12), []).append((c, r))
+    sweep = "".join(f'<path class="sw" d="{cells_d(cells, cell, .5)}" style="animation:sweep 6s linear {n(delay + k * .045)}s infinite"/>'
+                    for k, cells in sorted(buckets.items()))
+    body = (f'<g clip-path="url(#{clip})"><rect width="{w}" height="{h}" fill="{fill}"/>'
+            f'<g fill="{PRIMARY}" fill-opacity=".45" shape-rendering="crispEdges">{sweep}</g></g>'
+            + text(MEDIUM, label, pad, h / 2 + 4.6, 13, ink, track=.08)
+            + f'<circle cx="{n(w - 7 - dot / 2)}" cy="{h / 2}" r="{dot / 2}" fill="{ink}"/>' + arrow(w - 7 - dot / 2, h / 2, 8, fill))
+    css = ".sw{opacity:0}@keyframes sweep{0%{opacity:0}4%{opacity:1}9%{opacity:0}100%{opacity:0}}"
+    defs = f'<clipPath id="{clip}"><rect width="{w}" height="{h}" rx="{h / 2}"/></clipPath>'
+    return svg(w, h, body, label, css, defs)
+
+
+# ============ ÉCRITURE ============
+def build():
+    files = {}
+    for theme, T in THEMES.items():
+        out = {"hero": hero(T), "profile": profile(T), "stack": stack(T), "player": player(T), "outro": outro(T)}
+        for key, (left, right) in SECTIONS.items():
+            out[f"divider-{key}"] = divider(T, left, right)
+        for i, (key, label) in enumerate(LINKS):
+            out[f"btn-{key}"] = button(T, label, 1.2 + i * .35)
+        files[theme] = out
+    for theme, out in files.items():
+        folder = os.path.join(OUT, theme)
+        os.makedirs(folder, exist_ok=True)
+        for key, content in out.items():
+            with open(os.path.join(folder, key + ".svg"), "w", encoding="utf-8") as fh:
+                fh.write(content)
+    print("OK:", ", ".join(files["light"]), "-> assets/light + assets/dark")
+
+
+if __name__ == "__main__":
+    build()

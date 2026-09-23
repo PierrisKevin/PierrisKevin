@@ -1,47 +1,60 @@
-<p align="center">
-  <img src="./assets/banner.svg" width="100%" alt="KEVIN RAND — WEB DEVELOPER">
-</p>
+<!-- Visuels générés par tools/gen.py (versions claire et sombre) : modifie la CONFIG puis lance `python tools/gen.py`. -->
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/PierrisKevin/PierrisKevin/main/assets/dark/hero.svg">
+  <img src="https://raw.githubusercontent.com/PierrisKevin/PierrisKevin/main/assets/light/hero.svg" width="100%" alt="KEVIN RAND — web developer, bug hunter, happy hardcore addict. I build stuff for the web.">
+</picture>
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/PierrisKevin/PierrisKevin/main/assets/dark/divider-profile.svg">
+  <img src="https://raw.githubusercontent.com/PierrisKevin/PierrisKevin/main/assets/light/divider-profile.svg" width="100%" alt="Player 1 — Profile">
+</picture>
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/PierrisKevin/PierrisKevin/main/assets/dark/profile.svg">
+  <img src="https://raw.githubusercontent.com/PierrisKevin/PierrisKevin/main/assets/light/profile.svg" width="100%" alt="Hey! Welcome to my profile. I build stuff for the web, fueled by happy hardcore @ 180 BPM. Level 07 web developer — frontend 9, backend 7, debug 8, UI/UX 6, caffeine 10, BPM 10.">
+</picture>
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/PierrisKevin/PierrisKevin/main/assets/dark/divider-stack.svg">
+  <img src="https://raw.githubusercontent.com/PierrisKevin/PierrisKevin/main/assets/light/divider-stack.svg" width="100%" alt="Inventory — Stack">
+</picture>
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/PierrisKevin/PierrisKevin/main/assets/dark/stack.svg">
+  <img src="https://raw.githubusercontent.com/PierrisKevin/PierrisKevin/main/assets/light/stack.svg" width="100%" alt="Inventory: JavaScript, TypeScript, HTML, CSS, React, Node.js, PHP, SQL, Git, Bash">
+</picture>
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/PierrisKevin/PierrisKevin/main/assets/dark/divider-scores.svg">
+  <img src="https://raw.githubusercontent.com/PierrisKevin/PierrisKevin/main/assets/light/divider-scores.svg" width="100%" alt="High scores — GitHub">
+</picture>
 
 <p align="center">
-  <img src="./assets/dialog.svg" width="100%" alt="HEY! WELCOME TO MY PROFILE. I BUILD STUFF FOR THE WEB. FUELED BY HAPPY HARDCORE @ 180 BPM.">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://github-readme-stats.vercel.app/api?username=PierrisKevin&show_icons=true&border_radius=22&bg_color=0f0d0b&title_color=eae6e1&text_color=a69f96&icon_color=e9850c&ring_color=e9850c&border_color=37332f">
+    <img height="170" src="https://github-readme-stats.vercel.app/api?username=PierrisKevin&show_icons=true&border_radius=22&bg_color=fbfaf9&title_color=171412&text_color=726b65&icon_color=e9850c&ring_color=e9850c&border_color=e4e1dd" alt="GitHub stats">
+  </picture>
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://streak-stats.demolab.com?user=PierrisKevin&border_radius=22&background=0f0d0b&border=37332f&stroke=37332f&ring=e9850c&fire=e9850c&currStreakNum=eae6e1&sideNums=eae6e1&currStreakLabel=e9850c&sideLabels=a69f96&dates=a69f96">
+    <img height="170" src="https://streak-stats.demolab.com?user=PierrisKevin&border_radius=22&background=fbfaf9&border=e4e1dd&stroke=e4e1dd&ring=e9850c&fire=e9850c&currStreakNum=171412&sideNums=171412&currStreakLabel=e9850c&sideLabels=726b65&dates=726b65" alt="Streak">
+  </picture>
 </p>
 
-<img src="./assets/divider.svg" width="100%" alt="">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/PierrisKevin/PierrisKevin/main/assets/dark/divider-music.svg">
+  <img src="https://raw.githubusercontent.com/PierrisKevin/PierrisKevin/main/assets/light/divider-music.svg" width="100%" alt="Now playing — Soundtrack">
+</picture>
 
-<img src="./assets/h-player1.svg" height="52" alt="PLAYER 1">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/PierrisKevin/PierrisKevin/main/assets/dark/player.svg">
+  <img src="https://raw.githubusercontent.com/PierrisKevin/PierrisKevin/main/assets/light/player.svg" width="100%" alt="Now playing: Happy Hardcore Megamix, vol. 180 — stay happy, stay hardcore">
+</picture>
 
-<p align="center">
-  <img src="./assets/select.svg" width="100%" alt="Character select — Kevin, class Web Developer">
-</p>
-
-<img src="./assets/divider.svg" width="100%" alt="">
-
-<img src="./assets/h-inventory.svg" height="52" alt="INVENTORY">
-
-<p align="center">
-  <img src="./assets/inventory.svg" width="100%" alt="Inventory: JavaScript, TypeScript, HTML, CSS, React, Node.js, PHP, SQL, Git, Bash">
-</p>
-
-<img src="./assets/divider.svg" width="100%" alt="">
-
-<img src="./assets/h-scores.svg" height="52" alt="HIGH SCORES">
-
-<p align="center">
-  <img height="170" src="https://github-readme-stats.vercel.app/api?username=PierrisKevin&show_icons=true&bg_color=000000&title_color=ffffff&text_color=ffffff&icon_color=ffffff&ring_color=ffffff&border_color=ffffff&border_radius=0" alt="GitHub stats">
-  <img height="170" src="https://streak-stats.demolab.com?user=PierrisKevin&background=000000&border=FFFFFF&stroke=FFFFFF&ring=FFFFFF&fire=FFFFFF&currStreakNum=FFFFFF&sideNums=FFFFFF&currStreakLabel=FFFFFF&sideLabels=FFFFFF&dates=999999&border_radius=0" alt="Streak">
-</p>
-
-<img src="./assets/divider.svg" width="100%" alt="">
-
-<img src="./assets/h-music.svg" height="52" alt="NOW PLAYING">
-
-<p align="center">
-  <img src="./assets/player.svg" width="100%" alt="Now playing: Happy Hardcore megamix @ 180 BPM">
-</p>
-
-<img src="./assets/divider.svg" width="100%" alt="">
-
-<img src="./assets/h-bonus.svg" height="52" alt="BONUS STAGE">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/PierrisKevin/PierrisKevin/main/assets/dark/divider-bonus.svg">
+  <img src="https://raw.githubusercontent.com/PierrisKevin/PierrisKevin/main/assets/light/divider-bonus.svg" width="100%" alt="Bonus stage — Contributions">
+</picture>
 
 <p align="center">
   <picture>
@@ -50,17 +63,31 @@
   </picture>
 </p>
 
-<img src="./assets/divider.svg" width="100%" alt="">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/PierrisKevin/PierrisKevin/main/assets/dark/divider-contact.svg">
+  <img src="https://raw.githubusercontent.com/PierrisKevin/PierrisKevin/main/assets/light/divider-contact.svg" width="100%" alt="Continue? — Contact">
+</picture>
 
-<img src="./assets/h-continue.svg" height="52" alt="CONTINUE ?">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/PierrisKevin/PierrisKevin/main/assets/dark/outro.svg">
+  <img src="https://raw.githubusercontent.com/PierrisKevin/PierrisKevin/main/assets/light/outro.svg" width="100%" alt="Let's build something together">
+</picture>
 
 <p align="center">
-  <img src="./assets/gameover.svg" width="100%" alt="CONTINUE? 9... 8... 7...">
+  <a href="mailto:ton.email@exemple.com"><picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/PierrisKevin/PierrisKevin/main/assets/dark/btn-email.svg">
+    <img height="52" src="https://raw.githubusercontent.com/PierrisKevin/PierrisKevin/main/assets/light/btn-email.svg" alt="Email">
+  </picture></a>
+  <a href="https://www.linkedin.com/in/ton-profil"><picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/PierrisKevin/PierrisKevin/main/assets/dark/btn-linkedin.svg">
+    <img height="52" src="https://raw.githubusercontent.com/PierrisKevin/PierrisKevin/main/assets/light/btn-linkedin.svg" alt="LinkedIn">
+  </picture></a>
+  <a href="https://ton-portfolio.com"><picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/PierrisKevin/PierrisKevin/main/assets/dark/btn-portfolio.svg">
+    <img height="52" src="https://raw.githubusercontent.com/PierrisKevin/PierrisKevin/main/assets/light/btn-portfolio.svg" alt="Portfolio">
+  </picture></a>
 </p>
 
 <p align="center">
-  <a href="mailto:ton.email@exemple.com"><img src="https://img.shields.io/badge/%E2%96%B6%20EMAIL-000000?style=for-the-badge&logo=gmail&logoColor=white" alt="Email"></a>
-  <a href="https://www.linkedin.com/in/ton-profil"><img src="https://img.shields.io/badge/%E2%96%B6%20LINKEDIN-000000?style=for-the-badge&logo=linkedin&logoColor=white" alt="LinkedIn"></a>
-  <a href="https://ton-portfolio.com"><img src="https://img.shields.io/badge/%E2%96%B6%20PORTFOLIO-000000?style=for-the-badge&logo=googlechrome&logoColor=white" alt="Portfolio"></a>
-  <img src="https://komarev.com/ghpvc/?username=PierrisKevin&label=PLAYERS&color=000000&style=for-the-badge" alt="Profile views">
+  <img src="https://komarev.com/ghpvc/?username=PierrisKevin&label=PLAYERS&color=e9850c&style=flat-square" alt="Profile views">
 </p>
