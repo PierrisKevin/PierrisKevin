@@ -17,20 +17,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: Platane/snk@v3
-        with:
-          github_user_name: ${{ github.repository_owner }}
-          outputs: |
-            dist/snake-light.svg?color_snake=#171412&color_dots=#edeceb,#d2d1cf,#a9a7a6,#72706e,#373432
-            dist/snake-dark.svg?palette=github-dark&color_snake=#ffffff&color_dots=#252320,#3b3836,#625f5c,#979490,#d0ccc7
-
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
-      # si l'API refuse quelque chose, on republie la dernière carte au lieu de bloquer le serpent
+      # la carte est générée AVANT le serpent : l'action snk tourne dans Docker (root)
+      # et dist/ ne serait plus accessible en écriture ensuite.
+      # Si l'API refuse quelque chose, on republie la dernière carte au lieu de bloquer le serpent.
       - name: Keep previous stats card
         run: |
+          mkdir -p dist
           for t in light dark; do
             curl -sfL -o dist/stats-$t.svg https://raw.githubusercontent.com/${{ github.repository }}/output/stats-$t.svg || true
           done
@@ -42,6 +38,13 @@ jobs:
           python tools/stats.py dist
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: Platane/snk@v3
+        with:
+          github_user_name: ${{ github.repository_owner }}
+          outputs: |
+            dist/snake-light.svg?color_snake=#171412&color_dots=#edeceb,#d2d1cf,#a9a7a6,#72706e,#373432
+            dist/snake-dark.svg?palette=github-dark&color_snake=#ffffff&color_dots=#252320,#3b3836,#625f5c,#979490,#d0ccc7
 
       - uses: crazy-max/ghaction-github-pages@v4
         with:
