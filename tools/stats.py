@@ -5,7 +5,7 @@
 #  branche `output` à côté du serpent. En local :
 #      GITHUB_TOKEN=<jeton> python tools/stats.py dist
 # ============================================================
-import datetime, json, os, sys, urllib.request
+import datetime, json, os, sys, urllib.error, urllib.request
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from gen import THEMES, TEXT, TITLE, KICK, anim, cells_d, kicker, n, segments, svg, text
@@ -39,50 +39,106 @@ query($login: String!, $from: DateTime!, $to: DateTime!) {
 }"""
 
 
+def warn(message):
+    """Annotation GitHub Actions : visible dans l'onglet Actions et via l'API publique des check runs."""
+    print(f"::warning title=stats::{message}", flush=True)
+
+
+def request(url, body=None):
+    headers = {"Authorization": f"bearer {TOKEN}", "User-Agent": f"{LOGIN}-profile-stats", "Accept": "application/vnd.github+json"}
+    req = urllib.request.Request(url, data=json.dumps(body).encode() if body else None, headers=headers)
+    try:
+        with urllib.request.urlopen(req, timeout=30) as response:
+            return json.load(response)
+    except urllib.error.HTTPError as error:
+        raise RuntimeError(f"{url} -> HTTP {error.code} {error.read()[:300]!r}") from None
+
+
 def graphql(query, **variables):
-    request = urllib.request.Request(
-        "https://api.github.com/graphql",
-        data=json.dumps({"query": query, "variables": variables}).encode(),
-        headers={"Authorization": f"bearer {TOKEN}", "User-Agent": f"{LOGIN}-profile-stats"},
-    )
-    with urllib.request.urlopen(request, timeout=30) as response:
-        payload = json.load(response)
-    if payload.get("errors"):
-        raise SystemExit(f"GitHub GraphQL : {payload['errors']}")
-    return payload["data"]["user"]
+    """Renvoie l'utilisateur, éventuellement partiel : un champ refusé par le jeton vaut None au lieu de tout casser."""
+    try:
+        payload = request("https://api.github.com/graphql", {"query": query, "variables": variables})
+    except RuntimeError as error:
+        warn(f"GraphQL : {error}")
+        return {}
+    for error in payload.get("errors") or []:
+        warn(f"GraphQL : {error.get('message')}")
+    return (payload.get("data") or {}).get("user") or {}
+
+
+def dig(data, *keys):
+    for key in keys:
+        if not isinstance(data, dict) or data.get(key) is None:
+            return None
+        data = data[key]
+    return data
+
+
+def rest_repos():
+    repos, page = [], 1
+    while True:
+        batch = request(f"https://api.github.com/users/{LOGIN}/repos?type=owner&per_page=100&page={page}")
+        repos += [repo for repo in batch if not repo["fork"]]
+        if len(batch) < 100:
+            return repos
+        page += 1
+
+
+def search_count(kind):
+    try:
+        return request(f"https://api.github.com/search/issues?q=author:{LOGIN}+type:{kind}&per_page=1")["total_count"]
+    except RuntimeError as error:
+        warn(str(error))
+        return None
 
 
 def fetch():
     user = graphql(Q_PROFILE, login=LOGIN)
-    repos = user["repositories"]["nodes"]
-    page = user["repositories"]["pageInfo"]
-    while page["hasNextPage"]:
-        more = graphql(Q_PROFILE, login=LOGIN, after=page["endCursor"])["repositories"]
-        repos += more["nodes"]
-        page = more["pageInfo"]
+    profile = request(f"https://api.github.com/users/{LOGIN}")
 
-    languages = {}
-    for repo in repos:
-        for edge in repo["languages"]["edges"]:
-            languages[edge["node"]["name"]] = languages.get(edge["node"]["name"], 0) + edge["size"]
+    languages, stars = {}, 0
+    if dig(user, "repositories", "nodes") is not None:
+        repos, page = user["repositories"]["nodes"], user["repositories"]["pageInfo"]
+        while page["hasNextPage"]:
+            more = dig(graphql(Q_PROFILE, login=LOGIN, after=page["endCursor"]), "repositories") or {"nodes": [], "pageInfo": {"hasNextPage": False}}
+            repos += more["nodes"]
+            page = more["pageInfo"]
+        repo_count = user["repositories"]["totalCount"]
+        for repo in repos:
+            stars += repo["stargazerCount"]
+            for edge in repo["languages"]["edges"]:
+                languages[edge["node"]["name"]] = languages.get(edge["node"]["name"], 0) + edge["size"]
+    else:
+        repos = rest_repos()
+        repo_count = len(repos)
+        for repo in repos:
+            stars += repo["stargazers_count"]
+            for name, size in request(repo["languages_url"]).items():
+                languages[name] = languages.get(name, 0) + size
 
+    first_year = int(profile["created_at"][:4])
+    years = dig(user, "contributionsCollection", "contributionYears") or list(range(datetime.date.today().year, first_year - 1, -1))
     days, total = {}, 0
-    for year in user["contributionsCollection"]["contributionYears"]:
-        calendar = graphql(Q_YEAR, login=LOGIN, **{"from": f"{year}-01-01T00:00:00Z", "to": f"{year}-12-31T23:59:59Z"})
-        calendar = calendar["contributionsCollection"]["contributionCalendar"]
+    for year in years:
+        calendar = dig(graphql(Q_YEAR, login=LOGIN, **{"from": f"{year}-01-01T00:00:00Z", "to": f"{year}-12-31T23:59:59Z"}),
+                       "contributionsCollection", "contributionCalendar")
+        if not calendar:
+            total = None
+            break
         total += calendar["totalContributions"]
         for week in calendar["weeks"]:
             for day in week["contributionDays"]:
                 days[day["date"]] = day["contributionCount"]
+    current, longest = streaks(days) if total is not None else (None, None)
 
-    current, longest = streaks(days)
+    pick = lambda value, fallback: value if value is not None else fallback()
     return {
-        "total": total, "current": current, "longest": longest,
-        "stars": sum(repo["stargazerCount"] for repo in repos),
-        "commits": user["contributionsCollection"]["totalCommitContributions"],
-        "prs": user["pullRequests"]["totalCount"], "issues": user["issues"]["totalCount"],
-        "contributed": user["repositoriesContributedTo"]["totalCount"],
-        "repos": user["repositories"]["totalCount"], "followers": user["followers"]["totalCount"],
+        "total": total, "current": current, "longest": longest, "stars": stars,
+        "commits": dig(user, "contributionsCollection", "totalCommitContributions"),
+        "prs": pick(dig(user, "pullRequests", "totalCount"), lambda: search_count("pr")),
+        "issues": pick(dig(user, "issues", "totalCount"), lambda: search_count("issue")),
+        "contributed": dig(user, "repositoriesContributedTo", "totalCount"),
+        "repos": repo_count, "followers": pick(dig(user, "followers", "totalCount"), lambda: profile["followers"]),
         "languages": sorted(languages.items(), key=lambda item: -item[1])[:5],
     }
 
@@ -109,7 +165,7 @@ FLAME = ["..#..", ".##..", ".###.", "####.", "#####", "##.##", ".###."]
 
 
 def number(value):
-    return f"{value:,}".replace(",", " ")
+    return "—" if value is None else f"{value:,}".replace(",", " ")
 
 
 def card(T, s):
@@ -117,8 +173,8 @@ def card(T, s):
     fg, mfg, border, accent = T["fg"], T["mfg"], T["border"], T["accent"]
     b = []
     # compteurs : filets haut / bas et séparateurs verticaux, comme la carte profil
-    counters = [(number(s["total"]), "CONTRIBUTIONS"), (str(s["current"]), "CURRENT STREAK"),
-                (str(s["longest"]), "LONGEST STREAK"), (number(s["stars"]), "STARS")]
+    counters = [(number(s["total"]), "CONTRIBUTIONS"), (number(s["current"]), "CURRENT STREAK"),
+                (number(s["longest"]), "LONGEST STREAK"), (number(s["stars"]), "STARS")]
     gy, gh, gw = 1, 108, (W - 2 * P) / len(counters)
     b.append(f'<rect x="{P}" y="{gy}" width="{W - 2 * P}" height="1" fill="{border}"/>'
              f'<rect x="{P}" y="{gy + gh}" width="{W - 2 * P}" height="1" fill="{border}"/>')
@@ -166,7 +222,11 @@ def main():
         raise SystemExit("GITHUB_TOKEN manquant")
     out = sys.argv[1] if len(sys.argv) > 1 else "dist"
     os.makedirs(out, exist_ok=True)
-    stats = fetch()
+    try:
+        stats = fetch()
+    except Exception as error:   # l'erreur apparaît en annotation dans l'onglet Actions
+        print(f"::error title=stats::{type(error).__name__}: {error}", flush=True)
+        raise
     for theme, T in THEMES.items():
         with open(os.path.join(out, f"stats-{theme}.svg"), "w", encoding="utf-8") as fh:
             fh.write(card(T, stats))

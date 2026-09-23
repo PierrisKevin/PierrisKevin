@@ -28,7 +28,15 @@ jobs:
         with:
           python-version: "3.12"
 
+      # si l'API refuse quelque chose, on republie la dernière carte au lieu de bloquer le serpent
+      - name: Keep previous stats card
+        run: |
+          for t in light dark; do
+            curl -sfL -o dist/stats-$t.svg https://raw.githubusercontent.com/${{ github.repository }}/output/stats-$t.svg || true
+          done
+
       - name: Generate stats card
+        continue-on-error: true
         run: |
           pip install fonttools
           python tools/stats.py dist
