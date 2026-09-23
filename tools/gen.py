@@ -8,15 +8,9 @@
 #  Modifie la CONFIG ci-dessous puis lance :  python tools/gen.py
 #  Dépendance : pip install fonttools  (les polices OFL sont téléchargées au 1er lancement)
 # ============================================================
-FIRST, LAST = "KEVIN", "RAND"
-ROLES     = ["web developer", "bug hunter", "hardcore addict"]      # mot manuscrit qui tourne
-BADGE     = "WEB DEVELOPER • BUG HUNTER • 180 BPM • "               # texte du badge circulaire
-STATUS    = "CODING @ 180 BPM"
-KICKER    = "N°07 — PLAYER ONE"
-CLAIM     = "I BUILD STUFF FOR THE WEB."
-NOTE      = ["FUELED BY HAPPY", "HARDCORE @ 180 BPM"]
-HELLO     = "HEY! WELCOME TO MY PROFILE."
-INTRO     = ["I BUILD STUFF FOR THE WEB, FUELED BY", "HAPPY HARDCORE @ 180 BPM."]    # une entrée = une ligne
+FIRST, LAST = "KEVIN", "RAND"                                    # seul texte du hero
+HELLO     = "Hey! Welcome to my profile."
+INTRO     = ["I build stuff for the web, fueled by", "happy hardcore @ 180 BPM."]    # une entrée = une ligne
 CLASS     = "WEB DEVELOPER"
 LEVEL     = "07"
 COUNTERS  = [("07", "LEVEL"), ("10", "ITEMS IN BAG"), ("180", "BPM"), ("99+", "COFFEES")]
@@ -43,13 +37,11 @@ SECTIONS  = {  # séparateurs : (texte gauche, texte droite)
     "bonus":   ("BONUS STAGE", "CONTRIBUTIONS"),
     "contact": ("CONTINUE ?", "CONTACT"),
 }
-OUTRO     = ("LET'S BUILD", "SOMETHING", "together")
+OUTRO     = ("LET'S BUILD", "SOMETHING", "TOGETHER")
 LINKS     = [("email", "EMAIL"), ("linkedin", "LINKEDIN"), ("portfolio", "PORTFOLIO")]
-# Polices pixel (Google Fonts, licence OFL) : (fichier, axes variables)
-FONT_DISPLAY = ("doto", {"ROND": 0, "wght": 700})   # titres : matrice de points carrés espacés
-FONT_TEXT    = ("pixelify", {"wght": 400})          # noms, boutons
-FONT_LABEL   = ("silkscreen", None)                 # petits libellés en capitales
-FONT_ACCENT  = ("jacquard24", None)                 # mot d'accent en ambre
+# Police pixel (Google Fonts, licence OFL) : (fichier, axes variables)
+FONT_TITLE = ("pixelify", {"wght": 700})   # nom, grands titres
+FONT_TEXT  = ("pixelify", {"wght": 500})   # phrases, noms, libellés
 # ============================================================
 import colorsys, datetime, math, os, urllib.request
 from fontTools.ttLib import TTFont
@@ -61,10 +53,7 @@ ROOT = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(ROOT, "..", "assets")
 FONT_DIR = os.path.join(ROOT, "fonts")
 FONT_URLS = {
-    "doto":       "https://github.com/google/fonts/raw/main/ofl/doto/Doto%5BROND,wght%5D.ttf",
-    "pixelify":   "https://github.com/google/fonts/raw/main/ofl/pixelifysans/PixelifySans%5Bwght%5D.ttf",
-    "silkscreen": "https://github.com/google/fonts/raw/main/ofl/silkscreen/Silkscreen-Regular.ttf",
-    "jacquard24": "https://github.com/google/fonts/raw/main/ofl/jacquard24/Jacquard24-Regular.ttf",
+    "pixelify": "https://github.com/google/fonts/raw/main/ofl/pixelifysans/PixelifySans%5Bwght%5D.ttf",
 }
 
 
@@ -179,7 +168,7 @@ class Face:
         return lines + [line]
 
 
-DISPLAY, TEXT, LABEL, ACCENT = (Face(*spec) for spec in (FONT_DISPLAY, FONT_TEXT, FONT_LABEL, FONT_ACCENT))
+TITLE, TEXT = Face(*FONT_TITLE), Face(*FONT_TEXT)
 
 
 def text(face, s, x, y, size, color, alpha=1, track=0.0, anchor="start", extra=""):
@@ -187,11 +176,11 @@ def text(face, s, x, y, size, color, alpha=1, track=0.0, anchor="start", extra="
     return f'<path d="{face.d(s, x, y, size, track, anchor)}" fill="{color}"{op}{extra}/>'
 
 
-KICK = 11   # taille des petits libellés
+KICK = 14   # taille des petits libellés
 
 
-def kicker(s, x, y, color, alpha=1, anchor="start", size=KICK, track=0.14):
-    return text(LABEL, s, x, y, size, color, alpha, track, anchor)
+def kicker(s, x, y, color, alpha=1, anchor="start", size=KICK, track=0.1):
+    return text(TEXT, s, x, y, size, color, alpha, track, anchor)
 
 
 # ---------------- PALETTE (tokens de genidraw-ui) ----------------
@@ -527,25 +516,6 @@ def crossfade(items, slot, fade=.5):
     return "".join(out), css
 
 
-def circle_text(cx, cy, radius, s, face, size, track, color):
-    """Texte posé sur un cercle (CircleBadge), glyphe par glyphe."""
-    names, xs, w = face.layout(s, size, track)
-    scale = size / face.upm
-    full = w + track * size
-    extra = (2 * math.pi * radius - full) / len(names)
-    out = []
-    for i, g in enumerate(names):
-        gw = face.hmtx[g][0] * scale
-        theta = math.pi + (xs[i] + i * extra + gw / 2) / radius
-        phi = theta + math.pi / 2
-        c, sn = math.cos(phi), math.sin(phi)
-        ax, ay = cx + radius * math.cos(theta), cy + radius * math.sin(theta)
-        pen = SVGPathPen(face.glyphs, ntos=n)
-        face.glyphs[g].draw(TransformPen(pen, (scale * c, scale * sn, scale * sn, -scale * c, ax - gw / 2 * c, ay - gw / 2 * sn)))
-        out.append(pen.getCommands())
-    return f'<path d="{"".join(out)}" fill="{color}"/>'
-
-
 def arrow(cx, cy, size, color, width=1.6):
     h = size / 2
     return (f'<path d="M{n(cx - h)} {n(cy + h)}L{n(cx + h)} {n(cy - h)}M{n(cx - h * .6)} {n(cy - h)}H{n(cx + h)}V{n(cy + h * .6)}" '
@@ -595,47 +565,52 @@ def icon(name, x, y, cell, fg, box=12):
 
 
 # ============ 1. HERO ============
+def pixel_reveal(x, y, w, h, cell=10, start=.2, spread=.7, seed=3):
+    """Masque qui dévoile une zone case par case, en diagonale (PixelReveal de genidraw)."""
+    cols, rows = -(-int(w) // cell), -(-int(h) // cell)
+    rng = mulberry(seed)
+    buckets = {}
+    for r in range(rows):
+        for c in range(cols):
+            delay = min(1, max(0, (c + r) / (cols + rows) + (rng() - .5) * .35))
+            buckets.setdefault(round(delay * 14), []).append((c, r))
+    mid = uid()
+    cells = "".join(f'<path d="{cells_d(group, cell, 0, x, y)}" fill="#fff"{anim("fin", .3, start + k / 14 * spread, "ease-out both")}/>'
+                    for k, group in sorted(buckets.items()))
+    # un aplat final efface les joints entre cases une fois la révélation terminée
+    cells += f'<rect x="{n(x)}" y="{n(y)}" width="{cols * cell}" height="{rows * cell}" fill="#fff"{anim("fin", .01, start + spread + .35, "linear both")}/>'
+    return mid, (f'<mask id="{mid}" maskUnits="userSpaceOnUse" x="{n(x)}" y="{n(y)}" width="{cols * cell}" height="{rows * cell}">'
+                 f'<g shape-rendering="crispEdges">{cells}</g></mask>')
+
+
 def hero(T):
-    W, H = 900, 440
+    W, H = 900, 320
     fg = T["fg"]
     defs, b = [], []
-    hd, hb, css = haze(350, 0, 550, 280, fg, cell=9, intensity=.42)
+    hd, hb, css = haze(470, 0, 430, 210, fg, cell=9, intensity=.4)
     defs.append(hd); b.append(hb)
-    fd, fb = flora(fg, "bottom-right", W - 316, H - 316, size=56, cell=6, seed=4, grow=.6, alpha=.9, soft=.3)
+    fd, fb = flora(fg, "bottom-left", -24, H - 240, size=44, cell=6, seed=11, grow=.9, alpha=.85, soft=.3)
     defs.append(fd); b.append(fb)
-    # barre du haut
-    b.append(f'<rect x="32" y="26" width="28" height="28" rx="8" fill="{PRIMARY}"/>'
-             + text(TEXT, FIRST[0], 46, 46, 17, "#fbfaf8", anchor="middle")
-             + text(TEXT, f"{FIRST.title()} {LAST.title()}", 72, 46, 17, fg))
-    sw = LABEL.width(STATUS, KICK, .14)
-    px = W - 50 - sw - 22 - 16
-    b.append(f'<rect x="{n(px)}" y="22.5" width="{n(W - 34 - px)}" height="35" rx="17.5" fill="none" stroke="{fg}" stroke-opacity=".16"/>'
-             + spinner(px + 16, 34, 12, PRIMARY) + kicker(STATUS, W - 50, 44.5, fg, .8, "end"))
-    # nom en matrice de points + mot d'accent qui tourne
-    size, x0, y1 = 128, 30, 196
-    b.append(text(DISPLAY, FIRST, x0, y1, size, fg, extra=anim("fin", .9, .15, "cubic-bezier(.16,1,.3,1) both")))
-    b.append(text(DISPLAY, LAST, x0 + 84, y1 + 104, size, fg, .5, extra=anim("fin", .9, .3, "cubic-bezier(.16,1,.3,1) both")))
-    roles, c = crossfade([text(ACCENT, r, x0 + 250, y1 + 142, 62, PRIMARY) for r in ROLES], 3.2, .6)
-    b.append(roles); css += c
-    # badge circulaire
-    cx, cy = 780, 150
-    b.append(f'<g style="transform-origin:{cx}px {cy}px;animation:spin 48s linear infinite">'
-             + circle_text(cx, cy, 50, BADGE, LABEL, 9.5, .1, fg) + '</g>'
-             + ornament(cx - 16.5, cy - 16.5, 3, fg, bloom=.8))
-    for i, line in enumerate(NOTE):
-        b.append(kicker(line, 836, 240 + i * 16, fg, .75, "end"))
-    # bas gauche
-    b.append(kicker(KICKER, 34, H - 72, fg, .6))
-    b.append(text(DISPLAY, CLAIM, 32, H - 38, 24, fg))
-    return svg(W, H, "".join(b), f"{FIRST} {LAST} — {', '.join(r.upper() for r in ROLES)}", css, "".join(defs))
+    # le nom, seul : contours pleins + écho de pixels ambre espacés
+    name = f"{FIRST} {LAST}"
+    size, track = 128, .02
+    w = TITLE.width(name, size, track)
+    x, y = (W - w) / 2, 206
+    d = TITLE.d(name, x, y, size, track)
+    pid = uid()
+    defs.append(f'<pattern id="{pid}" width="5" height="5" patternUnits="userSpaceOnUse"><rect width="3.6" height="3.6" fill="{PRIMARY}"/></pattern>')
+    mid, mask = pixel_reveal(x - 20, y - size * .72 - 10, w + 50, size * .72 + 30)
+    defs.append(mask)
+    b.append(f'<g mask="url(#{mid})"><path d="{d}" transform="translate(7 7)" fill="url(#{pid})" opacity=".75"/><path d="{d}" fill="{fg}"/></g>')
+    return svg(W, H, "".join(b), name, css, "".join(defs))
 
 
 # ============ 2. SÉPARATEUR ============
 def divider(T, left, right):
     W, H, cx = 900, 118, 450
-    b = [kicker(left, cx - 40, 39, T["fg"], .8, "end", 12),
+    b = [kicker(left, cx - 40, 40, T["fg"], 1, "end"),
          ornament(cx - 22, 12, 4, T["fg"], bloom=.2),
-         kicker(right, cx + 40, 39, T["fg"], .8, "start", 12),
+         kicker(right, cx + 40, 40, T["fg"], 1, "start"),
          f'<rect x="{cx - .5}" y="76" width="1" height="42" fill="{T["fg"]}" fill-opacity=".25" style="transform-origin:{cx}px 76px;animation:grow .9s cubic-bezier(.16,1,.3,1) .6s both"/>']
     return svg(W, H, "".join(b), f"{left} — {right}", "@keyframes grow{from{transform:scaleY(0)}}")
 
@@ -644,42 +619,42 @@ def divider(T, left, right):
 def profile(T):
     W, P = 900, 12
     fg, mfg = T["fg"], T["mfg"]
-    b = [kicker(f"PLAYER 1 — {CLASS}", P, 22, mfg)]
+    b = [kicker(f"PLAYER 1 — {CLASS}", P, 24, mfg)]
     lv = f"LV. {LEVEL}"
-    lw = LABEL.width(lv, KICK, .14) + 28
-    b.append(f'<rect x="{n(W - P - lw)}" y="4.5" width="{n(lw)}" height="27" rx="13.5" fill="none" stroke="{T["border"]}"/>'
-             + kicker(lv, W - P - 14, 22, fg, 1, "end"))
-    size, lead, y = 26, 36, 76
-    b.append(text(DISPLAY, HELLO, P, y, size, fg))
+    lw = TEXT.width(lv, KICK, .1) + 28
+    b.append(f'<rect x="{n(W - P - lw)}" y="4.5" width="{n(lw)}" height="30" rx="15" fill="none" stroke="{T["border"]}"/>'
+             + kicker(lv, W - P - 14, 24.5, fg, 1, "end"))
+    y = 84
+    b.append(text(TEXT, HELLO, P, y, 30, fg))
     for i, line in enumerate(INTRO):
-        b.append(text(DISPLAY, line, P, y + (i + 1) * lead, size, mfg))
-    last = y + len(INTRO) * lead
-    caret_x = P + DISPLAY.width(INTRO[-1], size) + 8
-    b.append(f'<rect x="{n(caret_x)}" y="{last - 19}" width="10" height="20" fill="{PRIMARY}" style="animation:blink 1.1s steps(1) infinite"/>')
+        b.append(text(TEXT, line, P, y + 38 + i * 32, 24, mfg))
+    last = y + 38 + (len(INTRO) - 1) * 32
+    caret_x = P + TEXT.width(INTRO[-1], 24) + 8
+    b.append(f'<rect x="{n(caret_x)}" y="{last - 18}" width="10" height="20" fill="{PRIMARY}" style="animation:blink 1.1s steps(1) infinite"/>')
     # compteurs : filets haut / bas et séparateurs verticaux
-    gy, gh, gw = last + 32, 104, (W - 2 * P) / len(COUNTERS)
+    gy, gh, gw = last + 32, 108, (W - 2 * P) / len(COUNTERS)
     b.append(f'<rect x="{P}" y="{gy}" width="{W - 2 * P}" height="1" fill="{T["border"]}"/>'
              f'<rect x="{P}" y="{gy + gh}" width="{W - 2 * P}" height="1" fill="{T["border"]}"/>')
     for i, (value, label) in enumerate(COUNTERS):
         x = P + i * gw
         if i:
             b.append(f'<rect x="{n(x)}" y="{gy + 16}" width="1" height="{gh - 32}" fill="{T["border"]}"/>')
-        b.append(text(DISPLAY, value, x + (22 if i else 0), gy + 58, 46, fg, extra=anim("fin", .6, .2 + i * .08, "ease-out both")))
-        b.append(kicker(label, x + (23 if i else 1), gy + 84, mfg))
+        b.append(text(TITLE, value, x + (22 if i else 0), gy + 60, 46, fg, extra=anim("fin", .6, .2 + i * .08, "ease-out both")))
+        b.append(kicker(label, x + (23 if i else 1), gy + 88, mfg))
     # stats en barres segmentées
-    sy, col = gy + gh + 44, (W - 2 * P - 48) / 2
+    sy, col = gy + gh + 46, (W - 2 * P - 48) / 2
     for i, (label, value) in enumerate(STATS):
-        x, y = P + (i % 2) * (col + 48), sy + (i // 2) * 42
+        x, y = P + (i % 2) * (col + 48), sy + (i // 2) * 44
         b.append(kicker(label, x, y, mfg) + kicker(f"{value:02d}/10", x + col, y, fg, 1, "end"))
         b.append(segments(x, y + 10, col, 6, 28, value / 10, fg, start=.5 + i * .15))
-    H = sy + (len(STATS) + 1) // 2 * 42 - 16
+    H = sy + (len(STATS) + 1) // 2 * 44 - 18
     return svg(W, H, "".join(b), f"Player 1 — {CLASS}, level {LEVEL}. {HELLO} {' '.join(INTRO)}")
 
 
 # ============ 4. INVENTAIRE ============
 def stack(T):
     W, cols = 900, 5
-    cw, ch = W / cols, 162
+    cw, ch = W / cols, 166
     rows = -(-len(ITEMS) // cols)
     H = rows * ch
     fg, mfg = T["fg"], T["mfg"]
@@ -694,15 +669,15 @@ def stack(T):
     b.append(f'<g><animateTransform attributeName="transform" type="translate" values="{vals}" '
              f'dur="{n(step * len(ITEMS))}s" calcMode="discrete" repeatCount="indefinite"/>'
              f'<path d="M10 10h10v2h-8v8h-2zM{n(cw - 10)} 10v10h-2v-8h-8v-2zM10 {ch - 10}h10v-2h-8v-8h-2zM{n(cw - 10)} {ch - 10}v-10h-2v8h-8v2z" fill="{PRIMARY}"/></g>')
-    desc = 10
-    while max(LABEL.width(line, desc, .08) for item in ITEMS for line in item[2:4]) > cw - 44:
+    desc = 12
+    while max(TEXT.width(line, desc, .06) for item in ITEMS for line in item[2:4]) > cw - 40:
         desc -= .25
     for i, (name, ic, d1, d2, rar) in enumerate(ITEMS):
         x, y = (i % cols) * cw, (i // cols) * ch
         b.append(icon(ic, x + 22, y + 22, 4, fg))
         b.append(rarity(x + cw - 24 - 33, y + 28, rar, fg))
-        b.append(text(TEXT, name, x + 22, y + 104, 19, fg))
-        b.append(kicker(d1, x + 22, y + 126, mfg, 1, "start", desc, .08) + kicker(d2, x + 22, y + 140, mfg, 1, "start", desc, .08))
+        b.append(text(TITLE, name, x + 22, y + 104, 20, fg))
+        b.append(kicker(d1, x + 22, y + 128, mfg, 1, "start", desc, .06) + kicker(d2, x + 22, y + 145, mfg, 1, "start", desc, .06))
     return svg(W, H, "".join(b), "Inventory: " + ", ".join(item[0] for item in ITEMS))
 
 
@@ -758,9 +733,9 @@ def player(T):
     disc, css = vinyl(8, 16, fg)
     b.append(disc)
     x0 = 8 + 135 + 36
-    b.append(spinner(x0, 18, 11, PRIMARY) + kicker("NOW PLAYING", x0 + 20, 27.5, mfg))
-    b.append(text(DISPLAY, TRACK[0], x0, 72, 30, fg))
-    b.append(kicker(TRACK[1], x0, 98, mfg))
+    b.append(spinner(x0, 17, 12, PRIMARY) + kicker("NOW PLAYING", x0 + 22, 28.5, mfg))
+    b.append(text(TITLE, TRACK[0], x0, 72, 30, fg))
+    b.append(kicker(TRACK[1], x0, 100, mfg))
     # égaliseur pixel
     ex, base, sq_s, gap = W - 8 - 16 * 11 + 4, 76, 7, 4
     pid, mid, gid = uid(), uid(), uid()
@@ -781,7 +756,7 @@ def player(T):
                     f'<animate attributeName="y" values="{";".join(str(base - h + gap) for h in hs)}" dur="{dur}s" calcMode="discrete" repeatCount="indefinite"/></rect>')
     b.append(f'<g mask="url(#{mid})" shape-rendering="crispEdges">{"".join(bars)}</g>')
     # progression
-    py, pw = 124, W - 8 - x0
+    py, pw = 122, W - 8 - x0
     count = 56
     sw = (pw - (count - 1) * 2) / count
     track = "".join(f'<rect x="{n(x0 + i * (sw + 2))}" y="{py}" width="{n(sw)}" height="6" rx="1"/>' for i in range(count))
@@ -790,38 +765,38 @@ def player(T):
     b.append(f'<g fill="{fg}" fill-opacity=".1">{track}</g>'
              f'<rect x="{x0}" y="{py}" width="0" height="6" fill="{PRIMARY}" clip-path="url(#{tid})">'
              f'<animate attributeName="width" values="{n(pw * .05)};{n(pw)}" dur="90s" calcMode="linear" repeatCount="indefinite"/></rect>')
-    b.append(kicker("SIDE A", x0, py + 30, mfg) + kicker("60:00", W - 8, py + 30, mfg, 1, "end"))
+    b.append(kicker("SIDE A", x0, py + 32, mfg) + kicker("60:00", W - 8, py + 32, mfg, 1, "end"))
     heart = [".#.#.", "#####", "#####", ".###.", "..#.."]
-    hx = x0 + pw / 2 - 40
+    hx = x0 + pw / 2 - 44
     hc = [(c, r) for r, row in enumerate(heart) for c, v in enumerate(row) if v == "#"]
-    b.append(f'<path d="{cells_d(hc, 2.4, .2, hx, py + 18.5)}" fill="{PRIMARY}" shape-rendering="crispEdges" style="animation:beat .333s steps(1) infinite"/>'
-             + kicker("180 BPM", hx + 20, py + 30, fg))
+    b.append(f'<path d="{cells_d(hc, 2.6, .2, hx, py + 19.5)}" fill="{PRIMARY}" shape-rendering="crispEdges" style="animation:beat .333s steps(1) infinite"/>'
+             + kicker("180 BPM", hx + 22, py + 32, fg))
     return svg(W, H, "".join(b), f"Now playing: {TRACK[0].title()} — {TRACK[1].title()}", css, defs)
 
 
 # ============ 6. FIN / CONTACT ============
 def outro(T):
-    W, H = 900, 300
-    fg = T["fg"]
+    W, H = 900, 340
+    fg, mfg = T["fg"], T["mfg"]
     defs, b = [], []
-    fd, fb = flora(fg, "top-right", W - 336 - 90, -30, size=56, cell=6, seed=37, grow=.4, alpha=.9, soft=.3)
+    fd, fb = flora(fg, "top-right", W - 336 - 60, -30, size=56, cell=6, seed=37, grow=.4, alpha=.85, soft=.3)
     defs.append(fd); b.append(fb)
-    b.append(kicker("CONTINUE ? — PRESS START", 14, 40, fg, .55))
+    b.append(kicker("CONTINUE ? — PRESS START", 14, 34, mfg))
     size = 58
-    b.append(text(DISPLAY, OUTRO[0], 12, 112, size, fg))
-    b.append(text(DISPLAY, OUTRO[1], 12 + 70, 174, size, fg, .5))
-    b.append(text(ACCENT, OUTRO[2], 12 + 330, 212, 58, PRIMARY))
+    b.append(text(TITLE, OUTRO[0], 12, 104, size, fg))
+    b.append(text(TITLE, OUTRO[1], 12 + 70, 166, size, mfg))
+    b.append(text(TITLE, OUTRO[2], 12 + 140, 228, size, PRIMARY))
     b.append(f'<rect x="14" y="{H - 52}" width="{W - 28}" height="1" fill="{fg}" fill-opacity=".14"/>')
-    b.append(kicker(f"© {datetime.date.today().year} {FIRST} {LAST}", 14, H - 20, fg, .45))
-    digits, c = crossfade([kicker(f"CONTINUE ? {k}", W - 14, H - 20, fg, .6, "end") for k in range(9, -1, -1)], 1, .05)
-    b.append(spinner(W - 14 - LABEL.width("CONTINUE ? 9", KICK, .14) - 22, H - 30, 11, PRIMARY) + digits)
+    b.append(kicker(f"© {datetime.date.today().year} {FIRST} {LAST}", 14, H - 18, mfg))
+    digits, c = crossfade([kicker(f"CONTINUE ? {k}", W - 14, H - 18, mfg, 1, "end") for k in range(9, -1, -1)], 1, .05)
+    b.append(spinner(W - 14 - TEXT.width("CONTINUE ? 9", KICK, .1) - 24, H - 30, 12, PRIMARY) + digits)
     return svg(W, H, "".join(b), f"{OUTRO[0]} {OUTRO[1]} {OUTRO[2]}", c, "".join(defs))
 
 
 def button(T, label, delay):
     """Pilule au trait fin (pas de fond), balayage de pixels PixelHover en boucle."""
     h, pad, dot = 52, 24, 38
-    tw = TEXT.width(label, 15, .06)
+    tw = TITLE.width(label, 15, .06)
     w = round(pad + tw + 18 + dot + 7)
     fg = T["fg"]
     clip = uid()
@@ -835,8 +810,8 @@ def button(T, label, delay):
     sweep = "".join(f'<path class="sw" d="{cells_d(cells, cell, .5)}" style="animation:sweep 6s linear {n(delay + k * .045)}s infinite"/>'
                     for k, cells in sorted(buckets.items()))
     body = (f'<g clip-path="url(#{clip})"><g fill="{PRIMARY}" fill-opacity=".4" shape-rendering="crispEdges">{sweep}</g></g>'
-            f'<rect x=".5" y=".5" width="{w - 1}" height="{h - 1}" rx="{(h - 1) / 2}" fill="none" stroke="{fg}" stroke-opacity=".28"/>'
-            + text(TEXT, label, pad, h / 2 + 5, 15, fg, track=.06)
+            f'<rect x=".5" y=".5" width="{w - 1}" height="{h - 1}" rx="{(h - 1) / 2}" fill="none" stroke="{fg}" stroke-opacity=".3"/>'
+            + text(TITLE, label, pad, h / 2 + 5.5, 15, fg, track=.06)
             + f'<circle cx="{n(w - 7 - dot / 2)}" cy="{h / 2}" r="{dot / 2}" fill="{PRIMARY}"/>' + arrow(w - 7 - dot / 2, h / 2, 8, "#171412"))
     css = ".sw{opacity:0}@keyframes sweep{0%{opacity:0}4%{opacity:1}9%{opacity:0}100%{opacity:0}}"
     defs = f'<clipPath id="{clip}"><rect width="{w}" height="{h}" rx="{h / 2}"/></clipPath>'
