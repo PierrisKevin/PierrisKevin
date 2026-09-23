@@ -3,7 +3,7 @@
 #  PIXEL README GENERATOR — Kevin RAND
 #  Pixel art discret, inspiré de GENIDRAW : polices pixel, ornements pixel à plusieurs
 #  opacités, flore qui pousse depuis les coins, trames en demi-teinte, barres segmentées.
-#  Fonds transparents ; chaque visuel existe en version claire ET sombre (assets/light, assets/dark).
+#  Fonds transparents, textes en blanc (avec un contour sombre pour rester lisibles en thème clair).
 #
 #  Modifie la CONFIG ci-dessous puis lance :  python tools/gen.py
 #  Dépendance : pip install fonttools  (les polices OFL sont téléchargées au 1er lancement)
@@ -172,9 +172,14 @@ class Face:
 TITLE, TEXT = Face(*FONT_TITLE), Face(*FONT_TEXT)
 
 
+def outline(width):
+    """Contour sombre sous le remplissage : invisible sur GitHub sombre, il garde le blanc lisible sur fond clair."""
+    return f' stroke="{THEME["outline"]}" stroke-width="{n(width)}" stroke-linejoin="miter" paint-order="stroke"'
+
+
 def text(face, s, x, y, size, color, alpha=1, track=0.0, anchor="start", extra=""):
     op = f' fill-opacity="{n(alpha)}"' if alpha < 1 else ""
-    return f'<path d="{face.d(s, x, y, size, track, anchor)}" fill="{color}"{op}{extra}/>'
+    return f'<path d="{face.d(s, x, y, size, track, anchor)}" fill="{color}"{op}{outline(max(1.4, size * .055))}{extra}/>'
 
 
 KICK = 14   # taille des petits libellés
@@ -190,12 +195,10 @@ def hsl(h, s, l):
     return "#%02x%02x%02x" % tuple(round(v * 255) for v in (r, g, b))
 
 
-# fonds transparents : seules les encres changent entre le thème clair et le thème sombre de GitHub.
-# accent = couleur principale (blanc sur GitHub sombre, noir sur GitHub clair), on_accent = encre posée dessus.
-THEMES = {
-    "light": dict(fg=hsl(30, 12, 8), mfg=hsl(30, 6, 42), border=hsl(32, 12, 84), accent="#171412", on_accent="#ffffff"),
-    "dark":  dict(fg=hsl(36, 18, 90), mfg=hsl(33, 8, 62), border=hsl(33, 8, 24), accent="#ffffff", on_accent="#171412"),
-}
+# Une seule version, en blanc, fond transparent. Pas de variante claire/sombre : <picture> suit le réglage
+# du système et non celui de GitHub, ce qui affichait la version à texte foncé sur GitHub sombre.
+# outline = contour posé sous les textes pour qu'ils restent lisibles si la page est vue en thème clair.
+THEME = dict(fg="#ffffff", mfg="#d2cdc6", border="#57534e", accent="#ffffff", on_accent="#0d1117", outline="#0d1117")
 
 
 # ---------------- SVG ----------------
@@ -492,7 +495,7 @@ def segments(x, y, w, h, count, ratio, fg, accent, gap=2.0, start=None, head=Tru
     for i in range(filled):
         style = anim("fin", .25, start + i * .035) if start is not None else ""
         tone = .5 + .5 * (i + 1) / count   # dégradé en paliers vers la tête
-        out.append(f'<rect {rect(i)} fill="{accent}" fill-opacity="{n(tone)}"{style}/>')
+        out.append(f'<rect {rect(i)} fill="{accent}" fill-opacity="{n(tone)}"{outline(1.2)}{style}/>')
     if head and filled < count:
         out.append(f'<rect {rect(filled)} fill="{accent}" opacity=".45" style="animation:head 1.1s ease-in-out infinite"/>')
     return "".join(out)
@@ -500,7 +503,7 @@ def segments(x, y, w, h, count, ratio, fg, accent, gap=2.0, start=None, head=Tru
 
 def rarity(x, y, value, fg, accent, size=5.0, gap=2.0):
     return "".join(f'<rect x="{n(x + i * (size + gap))}" y="{n(y)}" width="{size}" height="{size}" rx=".5" '
-                   f'fill="{accent if i < value else fg}"{"" if i < value else " fill-opacity=\".18\""}/>' for i in range(5))
+                   f'fill="{accent if i < value else fg}"{outline(1.2) if i < value else " fill-opacity=\".18\""}/>' for i in range(5))
 
 
 def crossfade(items, slot, fade=.5):
@@ -608,7 +611,7 @@ def hero(T):
     pattern, shadow = echo(d, T["accent"])
     mid, mask = pixel_reveal(x - 20, y - size * .72 - 10, w + 50, size * .72 + 30)
     defs += [pattern, mask]
-    b.append(f'<g mask="url(#{mid})">{shadow}<path d="{d}" fill="{T["accent"]}"/></g>')
+    b.append(f'<g mask="url(#{mid})">{shadow}<path d="{d}" fill="{T["accent"]}"{outline(6)}/></g>')
     return svg(W, H, "".join(b), name, css, "".join(defs))
 
 
@@ -796,7 +799,7 @@ def outro(T):
     d = TITLE.d(OUTRO[2], 12 + 140, 228, size)
     pattern, shadow = echo(d, T["accent"], offset=4)
     defs.append(pattern)
-    b.append(f'{shadow}<path d="{d}" fill="{T["accent"]}"/>')
+    b.append(f'{shadow}<path d="{d}" fill="{T["accent"]}"{outline(3)}/>')
     b.append(f'<rect x="14" y="{H - 52}" width="{W - 28}" height="1" fill="{fg}" fill-opacity=".14"/>')
     b.append(kicker(f"© {datetime.date.today().year} {FIRST} {LAST}", 14, H - 18, mfg))
     digits, c = crossfade([kicker(f"CONTINUE ? {k}", W - 14, H - 18, mfg, 1, "end") for k in range(9, -1, -1)], 1, .05)
@@ -821,9 +824,9 @@ def button(T, label, delay):
     sweep = "".join(f'<path class="sw" d="{cells_d(cells, cell, .5)}" style="animation:sweep 6s linear {n(delay + k * .045)}s infinite"/>'
                     for k, cells in sorted(buckets.items()))
     body = (f'<g clip-path="url(#{clip})"><g fill="{T["accent"]}" fill-opacity=".3" shape-rendering="crispEdges">{sweep}</g></g>'
-            f'<rect x=".5" y=".5" width="{w - 1}" height="{h - 1}" rx="{(h - 1) / 2}" fill="none" stroke="{fg}" stroke-opacity=".3"/>'
+            f'<rect x=".5" y=".5" width="{w - 1}" height="{h - 1}" rx="{(h - 1) / 2}" fill="none" stroke="{T["border"]}"/>'
             + text(TITLE, label, pad, h / 2 + 5.5, 15, fg, track=.06)
-            + f'<circle cx="{n(w - 7 - dot / 2)}" cy="{h / 2}" r="{dot / 2}" fill="{T["accent"]}"/>' + arrow(w - 7 - dot / 2, h / 2, 8, T["on_accent"]))
+            + f'<circle cx="{n(w - 7 - dot / 2)}" cy="{h / 2}" r="{dot / 2 - .75}" fill="{T["accent"]}" stroke="{T["outline"]}" stroke-width="1.5"/>' + arrow(w - 7 - dot / 2, h / 2, 8, T["on_accent"]))
     css = ".sw{opacity:0}@keyframes sweep{0%{opacity:0}4%{opacity:1}9%{opacity:0}100%{opacity:0}}"
     defs = f'<clipPath id="{clip}"><rect width="{w}" height="{h}" rx="{h / 2}"/></clipPath>'
     return svg(w, h, body, label, css, defs)
@@ -839,34 +842,29 @@ def bust_cache(files):
         readme = fh.read()
 
     def versioned(match):
-        theme, key = match.group(1), match.group(2)
-        content = files.get(theme, {}).get(key)
+        content = files.get(match.group(1))
         if content is None:
             return match.group(0)
-        return f"assets/{theme}/{key}.svg?v={hashlib.sha1(content.encode()).hexdigest()[:8]}"
+        return f"assets/{match.group(1)}.svg?v={hashlib.sha1(content.encode()).hexdigest()[:8]}"
 
-    readme = re.sub(r"assets/(light|dark)/([\w-]+)\.svg(?:\?v=[0-9a-f]+)?", versioned, readme)
+    readme = re.sub(r"assets/([\w-]+)\.svg(?:\?v=[0-9a-f]+)?", versioned, readme)
     with open(README, "w", encoding="utf-8", newline="\n") as fh:
         fh.write(readme)
 
 
 def build():
-    files = {}
-    for theme, T in THEMES.items():
-        out = {"hero": hero(T), "profile": profile(T), "stack": stack(T), "player": player(T), "outro": outro(T)}
-        for key, (left, right) in SECTIONS.items():
-            out[f"divider-{key}"] = divider(T, left, right)
-        for i, (key, label) in enumerate(LINKS):
-            out[f"btn-{key}"] = button(T, label, 1.2 + i * .35)
-        files[theme] = out
-    for theme, out in files.items():
-        folder = os.path.join(OUT, theme)
-        os.makedirs(folder, exist_ok=True)
-        for key, content in out.items():
-            with open(os.path.join(folder, key + ".svg"), "w", encoding="utf-8") as fh:
-                fh.write(content)
+    T = THEME
+    files = {"hero": hero(T), "profile": profile(T), "stack": stack(T), "player": player(T), "outro": outro(T)}
+    for key, (left, right) in SECTIONS.items():
+        files[f"divider-{key}"] = divider(T, left, right)
+    for i, (key, label) in enumerate(LINKS):
+        files[f"btn-{key}"] = button(T, label, 1.2 + i * .35)
+    os.makedirs(OUT, exist_ok=True)
+    for key, content in files.items():
+        with open(os.path.join(OUT, key + ".svg"), "w", encoding="utf-8") as fh:
+            fh.write(content)
     bust_cache(files)
-    print("OK:", ", ".join(files["light"]), "-> assets/light + assets/dark (README mis à jour)")
+    print("OK:", ", ".join(files), "-> assets/ (README mis à jour)")
 
 
 if __name__ == "__main__":

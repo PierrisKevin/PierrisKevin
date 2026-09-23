@@ -8,7 +8,7 @@
 import datetime, json, os, sys, urllib.error, urllib.request
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from gen import THEMES, TEXT, TITLE, KICK, anim, cells_d, kicker, n, segments, svg, text
+from gen import THEME, TEXT, TITLE, KICK, anim, cells_d, kicker, n, segments, svg, text
 
 LOGIN = os.environ.get("GITHUB_REPOSITORY_OWNER", "PierrisKevin")
 TOKEN = os.environ.get("GITHUB_TOKEN", "")
@@ -227,9 +227,8 @@ def main():
     except Exception as error:   # l'erreur apparaît en annotation dans l'onglet Actions
         print(f"::error title=stats::{type(error).__name__}: {error}", flush=True)
         raise
-    for theme, T in THEMES.items():
-        with open(os.path.join(out, f"stats-{theme}.svg"), "w", encoding="utf-8") as fh:
-            fh.write(card(T, stats))
+    with open(os.path.join(out, "stats.svg"), "w", encoding="utf-8") as fh:
+        fh.write(card(THEME, stats))
     print("stats:", {k: v for k, v in stats.items() if k != "languages"}, [name for name, _ in stats["languages"]])
 
 

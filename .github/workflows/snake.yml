@@ -27,9 +27,7 @@ jobs:
       - name: Keep previous stats card
         run: |
           mkdir -p dist
-          for t in light dark; do
-            curl -sfL -o dist/stats-$t.svg https://raw.githubusercontent.com/${{ github.repository }}/output/stats-$t.svg || true
-          done
+          curl -sfL -o dist/stats.svg https://raw.githubusercontent.com/${{ github.repository }}/output/stats.svg || true
 
       - name: Generate stats card
         continue-on-error: true
