@@ -32,12 +32,12 @@
 
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://github-readme-stats.vercel.app/api?username=PierrisKevin&show_icons=true&hide_border=true&bg_color=00000000&title_color=eae6e1&text_color=a69f96&icon_color=e9850c&ring_color=e9850c">
-    <img height="170" src="https://github-readme-stats.vercel.app/api?username=PierrisKevin&show_icons=true&hide_border=true&bg_color=00000000&title_color=171412&text_color=726b65&icon_color=e9850c&ring_color=e9850c" alt="GitHub stats">
+    <source media="(prefers-color-scheme: dark)" srcset="https://github-readme-stats.vercel.app/api?username=PierrisKevin&show_icons=true&hide_border=true&bg_color=00000000&title_color=eae6e1&text_color=a69f96&icon_color=ffffff&ring_color=ffffff">
+    <img height="170" src="https://github-readme-stats.vercel.app/api?username=PierrisKevin&show_icons=true&hide_border=true&bg_color=00000000&title_color=171412&text_color=726b65&icon_color=171412&ring_color=171412" alt="GitHub stats">
   </picture>
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://streak-stats.demolab.com?user=PierrisKevin&hide_border=true&background=00000000&stroke=37332f&ring=e9850c&fire=e9850c&currStreakNum=eae6e1&sideNums=eae6e1&currStreakLabel=e9850c&sideLabels=a69f96&dates=a69f96">
-    <img height="170" src="https://streak-stats.demolab.com?user=PierrisKevin&hide_border=true&background=00000000&stroke=e4e1dd&ring=e9850c&fire=e9850c&currStreakNum=171412&sideNums=171412&currStreakLabel=e9850c&sideLabels=726b65&dates=726b65" alt="Streak">
+    <source media="(prefers-color-scheme: dark)" srcset="https://streak-stats.demolab.com?user=PierrisKevin&hide_border=true&background=00000000&stroke=37332f&ring=ffffff&fire=ffffff&currStreakNum=eae6e1&sideNums=eae6e1&currStreakLabel=ffffff&sideLabels=a69f96&dates=a69f96">
+    <img height="170" src="https://streak-stats.demolab.com?user=PierrisKevin&hide_border=true&background=00000000&stroke=e4e1dd&ring=171412&fire=171412&currStreakNum=171412&sideNums=171412&currStreakLabel=171412&sideLabels=726b65&dates=726b65" alt="Streak">
   </picture>
 </p>
 
@@ -89,5 +89,5 @@
 </p>
 
 <p align="center">
-  <img src="https://komarev.com/ghpvc/?username=PierrisKevin&label=PLAYERS&color=e9850c&style=flat-square" alt="Profile views">
+  <img src="https://komarev.com/ghpvc/?username=PierrisKevin&label=PLAYERS&color=171412&style=flat-square" alt="Profile views">
 </p>
