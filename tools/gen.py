@@ -43,7 +43,7 @@ LINKS     = [("email", "EMAIL"), ("linkedin", "LINKEDIN"), ("portfolio", "PORTFO
 FONT_TITLE = ("pixelify", {"wght": 700})   # nom, grands titres
 FONT_TEXT  = ("pixelify", {"wght": 500})   # phrases, noms, libellés
 # ============================================================
-import colorsys, datetime, math, os, urllib.request
+import colorsys, datetime, hashlib, math, os, re, urllib.request
 from fontTools.ttLib import TTFont
 from fontTools.varLib import instancer
 from fontTools.pens.svgPathPen import SVGPathPen
@@ -51,6 +51,7 @@ from fontTools.pens.transformPen import TransformPen
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(ROOT, "..", "assets")
+README = os.path.join(ROOT, "..", "README.md")
 FONT_DIR = os.path.join(ROOT, "fonts")
 FONT_URLS = {
     "pixelify": "https://github.com/google/fonts/raw/main/ofl/pixelifysans/PixelifySans%5Bwght%5D.ttf",
@@ -829,6 +830,26 @@ def button(T, label, delay):
 
 
 # ============ ÉCRITURE ============
+def bust_cache(files):
+    """Ajoute ?v=<empreinte> aux images du README : l'adresse change dès que l'image change,
+    donc GitHub et les navigateurs rechargent la nouvelle version au lieu de garder l'ancienne en cache."""
+    if not os.path.exists(README):
+        return
+    with open(README, encoding="utf-8") as fh:
+        readme = fh.read()
+
+    def versioned(match):
+        theme, key = match.group(1), match.group(2)
+        content = files.get(theme, {}).get(key)
+        if content is None:
+            return match.group(0)
+        return f"assets/{theme}/{key}.svg?v={hashlib.sha1(content.encode()).hexdigest()[:8]}"
+
+    readme = re.sub(r"assets/(light|dark)/([\w-]+)\.svg(?:\?v=[0-9a-f]+)?", versioned, readme)
+    with open(README, "w", encoding="utf-8", newline="\n") as fh:
+        fh.write(readme)
+
+
 def build():
     files = {}
     for theme, T in THEMES.items():
@@ -844,7 +865,8 @@ def build():
         for key, content in out.items():
             with open(os.path.join(folder, key + ".svg"), "w", encoding="utf-8") as fh:
                 fh.write(content)
-    print("OK:", ", ".join(files["light"]), "-> assets/light + assets/dark")
+    bust_cache(files)
+    print("OK:", ", ".join(files["light"]), "-> assets/light + assets/dark (README mis à jour)")
 
 
 if __name__ == "__main__":
