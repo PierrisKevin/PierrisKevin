@@ -30,16 +30,10 @@
   <img src="https://raw.githubusercontent.com/PierrisKevin/PierrisKevin/main/assets/light/divider-scores.svg?v=6a607a02" width="100%" alt="High scores — GitHub">
 </picture>
 
-<p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://github-readme-stats.vercel.app/api?username=PierrisKevin&show_icons=true&hide_border=true&bg_color=00000000&title_color=eae6e1&text_color=a69f96&icon_color=ffffff&ring_color=ffffff">
-    <img height="170" src="https://github-readme-stats.vercel.app/api?username=PierrisKevin&show_icons=true&hide_border=true&bg_color=00000000&title_color=171412&text_color=726b65&icon_color=171412&ring_color=171412" alt="GitHub stats">
-  </picture>
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://streak-stats.demolab.com?user=PierrisKevin&hide_border=true&background=00000000&stroke=37332f&ring=ffffff&fire=ffffff&currStreakNum=eae6e1&sideNums=eae6e1&currStreakLabel=ffffff&sideLabels=a69f96&dates=a69f96">
-    <img height="170" src="https://streak-stats.demolab.com?user=PierrisKevin&hide_border=true&background=00000000&stroke=e4e1dd&ring=171412&fire=171412&currStreakNum=171412&sideNums=171412&currStreakLabel=171412&sideLabels=726b65&dates=726b65" alt="Streak">
-  </picture>
-</p>
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/PierrisKevin/PierrisKevin/output/stats-dark.svg">
+  <img src="https://raw.githubusercontent.com/PierrisKevin/PierrisKevin/output/stats-light.svg" width="100%" alt="GitHub stats: contributions, streaks, stars and top languages">
+</picture>
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/PierrisKevin/PierrisKevin/main/assets/dark/divider-music.svg?v=d8b88421">

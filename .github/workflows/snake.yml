@@ -1,4 +1,4 @@
-name: Generate snake
+name: Generate snake & stats
 
 on:
   schedule:
@@ -13,14 +13,27 @@ permissions:
 jobs:
   generate:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
     steps:
+      - uses: actions/checkout@v4
+
       - uses: Platane/snk@v3
         with:
           github_user_name: ${{ github.repository_owner }}
           outputs: |
             dist/snake-light.svg?color_snake=#171412&color_dots=#edeceb,#d2d1cf,#a9a7a6,#72706e,#373432
             dist/snake-dark.svg?palette=github-dark&color_snake=#ffffff&color_dots=#252320,#3b3836,#625f5c,#979490,#d0ccc7
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Generate stats card
+        run: |
+          pip install fonttools
+          python tools/stats.py dist
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - uses: crazy-max/ghaction-github-pages@v4
         with:
