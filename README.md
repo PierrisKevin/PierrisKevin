@@ -32,12 +32,12 @@
 
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://github-readme-stats.vercel.app/api?username=PierrisKevin&show_icons=true&border_radius=22&bg_color=0f0d0b&title_color=eae6e1&text_color=a69f96&icon_color=e9850c&ring_color=e9850c&border_color=37332f">
-    <img height="170" src="https://github-readme-stats.vercel.app/api?username=PierrisKevin&show_icons=true&border_radius=22&bg_color=fbfaf9&title_color=171412&text_color=726b65&icon_color=e9850c&ring_color=e9850c&border_color=e4e1dd" alt="GitHub stats">
+    <source media="(prefers-color-scheme: dark)" srcset="https://github-readme-stats.vercel.app/api?username=PierrisKevin&show_icons=true&hide_border=true&bg_color=00000000&title_color=eae6e1&text_color=a69f96&icon_color=e9850c&ring_color=e9850c">
+    <img height="170" src="https://github-readme-stats.vercel.app/api?username=PierrisKevin&show_icons=true&hide_border=true&bg_color=00000000&title_color=171412&text_color=726b65&icon_color=e9850c&ring_color=e9850c" alt="GitHub stats">
   </picture>
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://streak-stats.demolab.com?user=PierrisKevin&border_radius=22&background=0f0d0b&border=37332f&stroke=37332f&ring=e9850c&fire=e9850c&currStreakNum=eae6e1&sideNums=eae6e1&currStreakLabel=e9850c&sideLabels=a69f96&dates=a69f96">
-    <img height="170" src="https://streak-stats.demolab.com?user=PierrisKevin&border_radius=22&background=fbfaf9&border=e4e1dd&stroke=e4e1dd&ring=e9850c&fire=e9850c&currStreakNum=171412&sideNums=171412&currStreakLabel=e9850c&sideLabels=726b65&dates=726b65" alt="Streak">
+    <source media="(prefers-color-scheme: dark)" srcset="https://streak-stats.demolab.com?user=PierrisKevin&hide_border=true&background=00000000&stroke=37332f&ring=e9850c&fire=e9850c&currStreakNum=eae6e1&sideNums=eae6e1&currStreakLabel=e9850c&sideLabels=a69f96&dates=a69f96">
+    <img height="170" src="https://streak-stats.demolab.com?user=PierrisKevin&hide_border=true&background=00000000&stroke=e4e1dd&ring=e9850c&fire=e9850c&currStreakNum=171412&sideNums=171412&currStreakLabel=e9850c&sideLabels=726b65&dates=726b65" alt="Streak">
   </picture>
 </p>
 

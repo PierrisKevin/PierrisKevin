@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # ============================================================
 #  PIXEL README GENERATOR — Kevin RAND
-#  Pixel art discret, inspiré de GENIDRAW : typo fine, ornements pixel à plusieurs
+#  Pixel art discret, inspiré de GENIDRAW : polices pixel, ornements pixel à plusieurs
 #  opacités, flore qui pousse depuis les coins, trames en demi-teinte, barres segmentées.
-#  Chaque visuel est généré en version claire ET sombre (assets/light, assets/dark).
+#  Fonds transparents ; chaque visuel existe en version claire ET sombre (assets/light, assets/dark).
 #
 #  Modifie la CONFIG ci-dessous puis lance :  python tools/gen.py
 #  Dépendance : pip install fonttools  (les polices OFL sont téléchargées au 1er lancement)
@@ -45,6 +45,11 @@ SECTIONS  = {  # séparateurs : (texte gauche, texte droite)
 }
 OUTRO     = ("LET'S BUILD", "SOMETHING", "together")
 LINKS     = [("email", "EMAIL"), ("linkedin", "LINKEDIN"), ("portfolio", "PORTFOLIO")]
+# Polices pixel (Google Fonts, licence OFL) : (fichier, axes variables)
+FONT_DISPLAY = ("doto", {"ROND": 0, "wght": 700})   # titres : matrice de points carrés espacés
+FONT_TEXT    = ("pixelify", {"wght": 400})          # noms, boutons
+FONT_LABEL   = ("silkscreen", None)                 # petits libellés en capitales
+FONT_ACCENT  = ("jacquard24", None)                 # mot d'accent en ambre
 # ============================================================
 import colorsys, datetime, math, os, urllib.request
 from fontTools.ttLib import TTFont
@@ -56,9 +61,10 @@ ROOT = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(ROOT, "..", "assets")
 FONT_DIR = os.path.join(ROOT, "fonts")
 FONT_URLS = {
-    "outfit": "https://github.com/google/fonts/raw/main/ofl/outfit/Outfit%5Bwght%5D.ttf",
-    "mono":   "https://github.com/google/fonts/raw/main/ofl/jetbrainsmono/JetBrainsMono%5Bwght%5D.ttf",
-    "script": "https://github.com/google/fonts/raw/main/ofl/greatvibes/GreatVibes-Regular.ttf",
+    "doto":       "https://github.com/google/fonts/raw/main/ofl/doto/Doto%5BROND,wght%5D.ttf",
+    "pixelify":   "https://github.com/google/fonts/raw/main/ofl/pixelifysans/PixelifySans%5Bwght%5D.ttf",
+    "silkscreen": "https://github.com/google/fonts/raw/main/ofl/silkscreen/Silkscreen-Regular.ttf",
+    "jacquard24": "https://github.com/google/fonts/raw/main/ofl/jacquard24/Jacquard24-Regular.ttf",
 }
 
 
@@ -117,10 +123,10 @@ def pair_value(subtables, a, b):
 
 
 class Face:
-    def __init__(self, key, wght=None):
+    def __init__(self, key, axes=None):
         font = TTFont(font_file(key))
-        if wght is not None and "fvar" in font:
-            font = instancer.instantiateVariableFont(font, {"wght": wght})
+        if axes and "fvar" in font:
+            font = instancer.instantiateVariableFont(font, axes)
         self.upm = font["head"].unitsPerEm
         self.cmap = font.getBestCmap()
         self.glyphs = font.getGlyphSet()
@@ -173,8 +179,7 @@ class Face:
         return lines + [line]
 
 
-LIGHT, REGULAR, MEDIUM = Face("outfit", 300), Face("outfit", 400), Face("outfit", 500)
-MONO, SCRIPT = Face("mono", 400), Face("script")
+DISPLAY, TEXT, LABEL, ACCENT = (Face(*spec) for spec in (FONT_DISPLAY, FONT_TEXT, FONT_LABEL, FONT_ACCENT))
 
 
 def text(face, s, x, y, size, color, alpha=1, track=0.0, anchor="start", extra=""):
@@ -182,8 +187,11 @@ def text(face, s, x, y, size, color, alpha=1, track=0.0, anchor="start", extra="
     return f'<path d="{face.d(s, x, y, size, track, anchor)}" fill="{color}"{op}{extra}/>'
 
 
-def kicker(s, x, y, color, alpha=1, anchor="start", size=10.5, track=0.22):
-    return text(MONO, s, x, y, size, color, alpha, track, anchor)
+KICK = 11   # taille des petits libellés
+
+
+def kicker(s, x, y, color, alpha=1, anchor="start", size=KICK, track=0.14):
+    return text(LABEL, s, x, y, size, color, alpha, track, anchor)
 
 
 # ---------------- PALETTE (tokens de genidraw-ui) ----------------
@@ -193,13 +201,11 @@ def hsl(h, s, l):
 
 
 PRIMARY = hsl(33, 90, 48)
+# fonds transparents : seules les encres changent entre le thème clair et le thème sombre de GitHub
 THEMES = {
-    "light": dict(bg=hsl(40, 24, 98), fg=hsl(30, 12, 8), mfg=hsl(30, 6, 42), border=hsl(32, 12, 88),
-                  cover=hsl(30, 12, 8), hero="#1a1714", rim=None),
-    "dark":  dict(bg=hsl(30, 15, 5), fg=hsl(36, 18, 90), mfg=hsl(33, 8, 62), border=hsl(33, 8, 20),
-                  cover=hsl(30, 6, 13), hero="#0c0a09", rim="#ffffff"),
+    "light": dict(fg=hsl(30, 12, 8), mfg=hsl(30, 6, 42), border=hsl(32, 12, 84)),
+    "dark":  dict(fg=hsl(36, 18, 90), mfg=hsl(33, 8, 62), border=hsl(33, 8, 24)),
 }
-PAPER = hsl(36, 18, 90)   # encre claire posée sur les cartes sombres
 
 
 # ---------------- SVG ----------------
@@ -235,11 +241,6 @@ def sq(x, y, s):
 
 def cells_d(cells, cell, gap=0.0, ox=0.0, oy=0.0):
     return "".join(sq(ox + x * cell + gap, oy + y * cell + gap, cell - 2 * gap) for x, y in cells)
-
-
-def card(w, h, T, r=22, fill=None, rim=True):
-    stroke = f' stroke="{T["border"]}"' if rim else ""
-    return f'<rect x=".5" y=".5" width="{w - 1}" height="{h - 1}" rx="{r}" fill="{fill or T["bg"]}"{stroke}/>'
 
 
 # ---------------- ORNEMENT (rosace pixel de genidraw) ----------------
@@ -596,94 +597,83 @@ def icon(name, x, y, cell, fg, box=12):
 # ============ 1. HERO ============
 def hero(T):
     W, H = 900, 440
-    clip = uid()
-    defs = [f'<clipPath id="{clip}"><rect width="{W}" height="{H}" rx="28"/></clipPath>']
-    glow, cool = uid(), uid()
-    defs.append(f'<radialGradient id="{glow}" gradientUnits="userSpaceOnUse" cx="0" cy="0" r="1" gradientTransform="translate(760 500) scale(520 380)">'
-                f'<stop offset="0" stop-color="{PRIMARY}" stop-opacity=".30"/><stop offset="1" stop-color="{PRIMARY}" stop-opacity="0"/></radialGradient>'
-                f'<radialGradient id="{cool}" gradientUnits="userSpaceOnUse" cx="0" cy="0" r="1" gradientTransform="translate(60 -40) scale(560 360)">'
-                f'<stop offset="0" stop-color="#8fa7c4" stop-opacity=".16"/><stop offset="1" stop-color="#8fa7c4" stop-opacity="0"/></radialGradient>')
-    b = [f'<rect width="{W}" height="{H}" fill="{T["hero"]}"/><rect width="{W}" height="{H}" fill="url(#{cool})"/><rect width="{W}" height="{H}" fill="url(#{glow})"/>']
-    hd, hb, css = haze(350, 0, 550, 280, "#fff", cell=9, intensity=.42)
+    fg = T["fg"]
+    defs, b = [], []
+    hd, hb, css = haze(350, 0, 550, 280, fg, cell=9, intensity=.42)
     defs.append(hd); b.append(hb)
-    fd, fb = flora(PAPER, "bottom-right", W - 316, H - 316, size=56, cell=6, seed=4, grow=.6, alpha=.8, soft=.35)
+    fd, fb = flora(fg, "bottom-right", W - 316, H - 316, size=56, cell=6, seed=4, grow=.6, alpha=.9, soft=.3)
     defs.append(fd); b.append(fb)
     # barre du haut
     b.append(f'<rect x="32" y="26" width="28" height="28" rx="8" fill="{PRIMARY}"/>'
-             + text(MEDIUM, FIRST[0], 46, 45.5, 15, "#fbfaf8", anchor="middle")
-             + text(REGULAR, f"{FIRST.title()} {LAST.title()}", 72, 45.5, 16, "#fff", track=-.01))
-    sw = MONO.width(STATUS, 10, .2)
+             + text(TEXT, FIRST[0], 46, 46, 17, "#fbfaf8", anchor="middle")
+             + text(TEXT, f"{FIRST.title()} {LAST.title()}", 72, 46, 17, fg))
+    sw = LABEL.width(STATUS, KICK, .14)
     px = W - 50 - sw - 22 - 16
-    b.append(f'<rect x="{n(px)}" y="22.5" width="{n(W - 34 - px)}" height="35" rx="17.5" fill="{T["hero"]}" fill-opacity=".62" stroke="#fff" stroke-opacity=".14"/>'
-             + spinner(px + 16, 34, 12, PRIMARY) + kicker(STATUS, W - 50, 44, "#fff", .8, "end", 10, .2))
-    # nom en capitales fines + mot manuscrit qui tourne
-    size, x0, y1 = 132, 26, 200
-    kw = LIGHT.width(FIRST, size, -.045)
-    b.append(text(LIGHT, FIRST, x0, y1, size, "#fff", track=-.045, extra=anim("fin", .9, .15, "cubic-bezier(.16,1,.3,1) both")))
-    b.append(text(REGULAR, "©", x0 + kw + 8, y1 - size * .56, 20, "#fff", .7))
-    b.append(text(LIGHT, LAST, x0 + 84, y1 + 106, size, "#fff", .55, track=-.045, extra=anim("fin", .9, .3, "cubic-bezier(.16,1,.3,1) both")))
-    roles, c = crossfade([text(SCRIPT, r, x0 + 236, y1 + 134, 64, "#fff") for r in ROLES], 3.2, .6)
+    b.append(f'<rect x="{n(px)}" y="22.5" width="{n(W - 34 - px)}" height="35" rx="17.5" fill="none" stroke="{fg}" stroke-opacity=".16"/>'
+             + spinner(px + 16, 34, 12, PRIMARY) + kicker(STATUS, W - 50, 44.5, fg, .8, "end"))
+    # nom en matrice de points + mot d'accent qui tourne
+    size, x0, y1 = 128, 30, 196
+    b.append(text(DISPLAY, FIRST, x0, y1, size, fg, extra=anim("fin", .9, .15, "cubic-bezier(.16,1,.3,1) both")))
+    b.append(text(DISPLAY, LAST, x0 + 84, y1 + 104, size, fg, .5, extra=anim("fin", .9, .3, "cubic-bezier(.16,1,.3,1) both")))
+    roles, c = crossfade([text(ACCENT, r, x0 + 250, y1 + 142, 62, PRIMARY) for r in ROLES], 3.2, .6)
     b.append(roles); css += c
     # badge circulaire
     cx, cy = 780, 150
     b.append(f'<g style="transform-origin:{cx}px {cy}px;animation:spin 48s linear infinite">'
-             + circle_text(cx, cy, 50, BADGE, MEDIUM, 9.4, .12, "#fff") + '</g>'
-             + ornament(cx - 16.5, cy - 16.5, 3, "#fff", bloom=.8))
+             + circle_text(cx, cy, 50, BADGE, LABEL, 9.5, .1, fg) + '</g>'
+             + ornament(cx - 16.5, cy - 16.5, 3, fg, bloom=.8))
     for i, line in enumerate(NOTE):
-        b.append(kicker(line, 836, 240 + i * 16, "#fff", .8, "end", 10, .16))
+        b.append(kicker(line, 836, 240 + i * 16, fg, .75, "end"))
     # bas gauche
-    b.append(kicker(KICKER, 36, H - 72, "#fff", .7))
-    b.append(text(LIGHT, CLAIM, 34, H - 38, 24, "#fff", track=-.01))
-    if T["rim"]:
-        b.append(f'<rect x=".5" y=".5" width="{W - 1}" height="{H - 1}" rx="28" fill="none" stroke="#fff" stroke-opacity=".1"/>')
-    body = f'<g clip-path="url(#{clip})">{"".join(b)}</g>'
-    return svg(W, H, body, f"{FIRST} {LAST} — {', '.join(r.upper() for r in ROLES)}", css, "".join(defs))
+    b.append(kicker(KICKER, 34, H - 72, fg, .6))
+    b.append(text(DISPLAY, CLAIM, 32, H - 38, 24, fg))
+    return svg(W, H, "".join(b), f"{FIRST} {LAST} — {', '.join(r.upper() for r in ROLES)}", css, "".join(defs))
 
 
 # ============ 2. SÉPARATEUR ============
 def divider(T, left, right):
     W, H, cx = 900, 118, 450
-    b = [kicker(left, cx - 40, 40, T["fg"], .8, "end", 11),
+    b = [kicker(left, cx - 40, 39, T["fg"], .8, "end", 12),
          ornament(cx - 22, 12, 4, T["fg"], bloom=.2),
-         kicker(right, cx + 40, 40, T["fg"], .8, "start", 11),
+         kicker(right, cx + 40, 39, T["fg"], .8, "start", 12),
          f'<rect x="{cx - .5}" y="76" width="1" height="42" fill="{T["fg"]}" fill-opacity=".25" style="transform-origin:{cx}px 76px;animation:grow .9s cubic-bezier(.16,1,.3,1) .6s both"/>']
     return svg(W, H, "".join(b), f"{left} — {right}", "@keyframes grow{from{transform:scaleY(0)}}")
 
 
 # ============ 3. PROFIL ============
 def profile(T):
-    W, P = 900, 32
+    W, P = 900, 12
     fg, mfg = T["fg"], T["mfg"]
-    b = [kicker(f"PLAYER 1 — {CLASS}", P, 46, mfg)]
+    b = [kicker(f"PLAYER 1 — {CLASS}", P, 22, mfg)]
     lv = f"LV. {LEVEL}"
-    lw = MONO.width(lv, 10.5, .18) + 28
-    b.append(f'<rect x="{n(W - P - lw)}" y="26" width="{n(lw)}" height="28" rx="14" fill="none" stroke="{T["border"]}"/>'
-             + kicker(lv, W - P - 14, 44.5, fg, 1, "end", 10.5, .18))
-    size, lead, y = 27, 35, 98
-    b.append(text(LIGHT, HELLO, P - 1, y, size, fg, track=-.01))
-    lines = INTRO
-    for i, line in enumerate(lines):
-        b.append(text(LIGHT, line, P - 1, y + (i + 1) * lead, size, mfg, track=-.01))
-    last = y + len(lines) * lead
-    caret_x = P + LIGHT.width(lines[-1], size, -.01) + 6
-    b.append(f'<rect x="{n(caret_x)}" y="{last - 20}" width="10" height="22" fill="{PRIMARY}" style="animation:blink 1.1s steps(1) infinite"/>')
-    # compteurs (grille à filets, comme Stats de genidraw)
-    gy, gh, gw = last + 30, 104, (W - 2 * P) / len(COUNTERS)
-    b.append(f'<rect x="{P + .5}" y="{gy + .5}" width="{W - 2 * P - 1}" height="{gh - 1}" rx="16" fill="none" stroke="{T["border"]}"/>')
+    lw = LABEL.width(lv, KICK, .14) + 28
+    b.append(f'<rect x="{n(W - P - lw)}" y="4.5" width="{n(lw)}" height="27" rx="13.5" fill="none" stroke="{T["border"]}"/>'
+             + kicker(lv, W - P - 14, 22, fg, 1, "end"))
+    size, lead, y = 26, 36, 76
+    b.append(text(DISPLAY, HELLO, P, y, size, fg))
+    for i, line in enumerate(INTRO):
+        b.append(text(DISPLAY, line, P, y + (i + 1) * lead, size, mfg))
+    last = y + len(INTRO) * lead
+    caret_x = P + DISPLAY.width(INTRO[-1], size) + 8
+    b.append(f'<rect x="{n(caret_x)}" y="{last - 19}" width="10" height="20" fill="{PRIMARY}" style="animation:blink 1.1s steps(1) infinite"/>')
+    # compteurs : filets haut / bas et séparateurs verticaux
+    gy, gh, gw = last + 32, 104, (W - 2 * P) / len(COUNTERS)
+    b.append(f'<rect x="{P}" y="{gy}" width="{W - 2 * P}" height="1" fill="{T["border"]}"/>'
+             f'<rect x="{P}" y="{gy + gh}" width="{W - 2 * P}" height="1" fill="{T["border"]}"/>')
     for i, (value, label) in enumerate(COUNTERS):
         x = P + i * gw
         if i:
-            b.append(f'<rect x="{n(x)}" y="{gy + 1}" width="1" height="{gh - 2}" fill="{T["border"]}"/>')
-        b.append(text(LIGHT, value, x + 22, gy + 56, 44, fg, track=-.03, extra=anim("fin", .6, .2 + i * .08, "ease-out both")))
-        b.append(kicker(label, x + 23, gy + 84, mfg, 1, "start", 10, .2))
+            b.append(f'<rect x="{n(x)}" y="{gy + 16}" width="1" height="{gh - 32}" fill="{T["border"]}"/>')
+        b.append(text(DISPLAY, value, x + (22 if i else 0), gy + 58, 46, fg, extra=anim("fin", .6, .2 + i * .08, "ease-out both")))
+        b.append(kicker(label, x + (23 if i else 1), gy + 84, mfg))
     # stats en barres segmentées
-    sy, col = gy + gh + 42, (W - 2 * P - 40) / 2
+    sy, col = gy + gh + 44, (W - 2 * P - 48) / 2
     for i, (label, value) in enumerate(STATS):
-        x, y = P + (i % 2) * (col + 40), sy + (i // 2) * 42
-        b.append(kicker(label, x, y, mfg, 1, "start", 10, .2) + kicker(f"{value:02d}/10", x + col, y, fg, 1, "end", 10, .1))
+        x, y = P + (i % 2) * (col + 48), sy + (i // 2) * 42
+        b.append(kicker(label, x, y, mfg) + kicker(f"{value:02d}/10", x + col, y, fg, 1, "end"))
         b.append(segments(x, y + 10, col, 6, 28, value / 10, fg, start=.5 + i * .15))
-    H = sy + (len(STATS) + 1) // 2 * 42 + 2
-    return svg(W, H, card(W, H, T) + "".join(b), f"Player 1 — {CLASS}, level {LEVEL}. {HELLO} {' '.join(INTRO)}")
+    H = sy + (len(STATS) + 1) // 2 * 42 - 16
+    return svg(W, H, "".join(b), f"Player 1 — {CLASS}, level {LEVEL}. {HELLO} {' '.join(INTRO)}")
 
 
 # ============ 4. INVENTAIRE ============
@@ -693,27 +683,27 @@ def stack(T):
     rows = -(-len(ITEMS) // cols)
     H = rows * ch
     fg, mfg = T["fg"], T["mfg"]
-    clip = uid()
-    b = [card(W, H, T)]
+    b = []
     for c in range(1, cols):
-        b.append(f'<rect x="{n(c * cw)}" y="1" width="1" height="{H - 2}" fill="{T["border"]}"/>')
+        b.append(f'<rect x="{n(c * cw)}" y="16" width="1" height="{H - 32}" fill="{T["border"]}"/>')
     for r in range(1, rows):
-        b.append(f'<rect x="1" y="{r * ch}" width="{W - 2}" height="1" fill="{T["border"]}"/>')
-    # curseur : la case active s'éclaire à tour de rôle
+        b.append(f'<rect x="16" y="{r * ch}" width="{W - 32}" height="1" fill="{T["border"]}"/>')
+    # curseur : des coins ambre passent d'une case à l'autre
     step = 2.2
     vals = ";".join(f"{n((i % cols) * cw)} {(i // cols) * ch}" for i in range(len(ITEMS)))
-    b.append(f'<g clip-path="url(#{clip})"><g><animateTransform attributeName="transform" type="translate" values="{vals}" '
+    b.append(f'<g><animateTransform attributeName="transform" type="translate" values="{vals}" '
              f'dur="{n(step * len(ITEMS))}s" calcMode="discrete" repeatCount="indefinite"/>'
-             f'<rect x="1" y="1" width="{n(cw - 1)}" height="{ch - 1}" fill="{PRIMARY}" fill-opacity=".07"/>'
-             f'<path d="M12 12h10v2h-8v8h-2zM{n(cw - 12)} 12v10h-2v-8h-8v-2zM12 {ch - 12}h10v-2h-8v-8h-2zM{n(cw - 12)} {ch - 12}v-10h-2v8h-8v2z" fill="{PRIMARY}"/></g></g>')
+             f'<path d="M10 10h10v2h-8v8h-2zM{n(cw - 10)} 10v10h-2v-8h-8v-2zM10 {ch - 10}h10v-2h-8v-8h-2zM{n(cw - 10)} {ch - 10}v-10h-2v8h-8v2z" fill="{PRIMARY}"/></g>')
+    desc = 10
+    while max(LABEL.width(line, desc, .08) for item in ITEMS for line in item[2:4]) > cw - 44:
+        desc -= .25
     for i, (name, ic, d1, d2, rar) in enumerate(ITEMS):
         x, y = (i % cols) * cw, (i // cols) * ch
         b.append(icon(ic, x + 22, y + 22, 4, fg))
         b.append(rarity(x + cw - 24 - 33, y + 28, rar, fg))
-        b.append(text(REGULAR, name, x + 23, y + 104, 18, fg, track=-.01))
-        b.append(kicker(d1, x + 24, y + 126, mfg, 1, "start", 8.6, .12) + kicker(d2, x + 24, y + 140, mfg, 1, "start", 8.6, .12))
-    defs = f'<clipPath id="{clip}"><rect width="{W}" height="{H}" rx="22"/></clipPath>'
-    return svg(W, H, "".join(b), "Inventory: " + ", ".join(item[0] for item in ITEMS), defs=defs)
+        b.append(text(TEXT, name, x + 22, y + 104, 19, fg))
+        b.append(kicker(d1, x + 22, y + 126, mfg, 1, "start", desc, .08) + kicker(d2, x + 22, y + 140, mfg, 1, "start", desc, .08))
+    return svg(W, H, "".join(b), "Inventory: " + ", ".join(item[0] for item in ITEMS))
 
 
 # ============ 5. NOW PLAYING ============
@@ -729,9 +719,10 @@ def flipbook(items, dur):
     return "".join(out), css
 
 
-def vinyl(x, y, cell=5, grid=27):
+def vinyl(x, y, ink, cell=5, grid=27):
+    """Disque pixel : sillons en deux tons, reflet qui tourne, étiquette ambre qui bat à 180 BPM."""
     mid = grid // 2
-    grooves, label, rim = {.09: [], .16: []}, [], []
+    grooves, label, rim = {.12: [], .24: []}, [], []
     polar = []
     for r in range(grid):
         for c in range(grid):
@@ -743,17 +734,17 @@ def vinyl(x, y, cell=5, grid=27):
             elif d > 12.4:
                 rim.append((c, r))
             else:
-                grooves[.09 if round(d) % 2 else .16].append((c, r))
+                grooves[.12 if round(d) % 2 else .24].append((c, r))
                 if 5.5 <= d <= 12:
                     polar.append((c, r, math.atan2(r - mid, c - mid)))
     gap = .5
-    body = "".join(f'<path d="{cells_d(cells, cell, gap, x, y)}" fill="{PAPER}" fill-opacity="{a}"/>' for a, cells in grooves.items())
-    body += f'<path d="{cells_d(rim, cell, gap, x, y)}" fill="{PAPER}" fill-opacity=".3"/>'
+    body = "".join(f'<path d="{cells_d(cells, cell, gap, x, y)}" fill="{ink}" fill-opacity="{a}"/>' for a, cells in grooves.items())
+    body += f'<path d="{cells_d(rim, cell, gap, x, y)}" fill="{ink}" fill-opacity=".45"/>'
     frames = []
     for k in range(12):
         theta = k * math.pi / 12
         cells = [(c, r) for c, r, a in polar if abs(math.remainder(a - theta, math.pi)) < .2]
-        frames.append(f'<path d="{cells_d(cells, cell, gap, x, y)}" fill="{PAPER}" fill-opacity=".34"/>')
+        frames.append(f'<path d="{cells_d(cells, cell, gap, x, y)}" fill="{ink}" fill-opacity=".4"/>')
     glint, css = flipbook(frames, 3)
     body += glint + (f'<path d="{cells_d(label, cell, gap, x, y)}" fill="{PRIMARY}" '
                      f'style="animation:beat .333s steps(1) infinite"/>')
@@ -761,27 +752,23 @@ def vinyl(x, y, cell=5, grid=27):
 
 
 def player(T):
-    W, H = 900, 206
+    W, H = 900, 166
     fg, mfg = T["fg"], T["mfg"]
-    b = [card(W, H, T)]
-    # pochette : vinyle pixel, reflet qui tourne, étiquette ambre qui bat à 180 BPM
-    cs, cx, cy = 155, 26, 26
-    clip = uid()
-    disc, spin_css = vinyl(cx + 10, cy + 10)
-    b.append(f'<g clip-path="url(#{clip})"><rect x="{cx}" y="{cy}" width="{cs}" height="{cs}" fill="{T["cover"]}"/>{disc}</g>')
-    defs = f'<clipPath id="{clip}"><rect x="{cx}" y="{cy}" width="{cs}" height="{cs}" rx="16"/></clipPath>'
-    x0 = cx + cs + 30
-    b.append(spinner(x0, 38, 11, PRIMARY) + kicker("NOW PLAYING", x0 + 20, 47.5, mfg))
-    b.append(text(LIGHT, TRACK[0], x0 - 1, 94, 32, fg, track=-.015))
-    b.append(kicker(TRACK[1], x0, 120, mfg, 1, "start", 10, .16))
+    b = []
+    disc, css = vinyl(8, 16, fg)
+    b.append(disc)
+    x0 = 8 + 135 + 36
+    b.append(spinner(x0, 18, 11, PRIMARY) + kicker("NOW PLAYING", x0 + 20, 27.5, mfg))
+    b.append(text(DISPLAY, TRACK[0], x0, 72, 30, fg))
+    b.append(kicker(TRACK[1], x0, 98, mfg))
     # égaliseur pixel
-    ex, base, sq_s, gap = W - 30 - 16 * 11 + 4, 96, 7, 4
+    ex, base, sq_s, gap = W - 8 - 16 * 11 + 4, 76, 7, 4
     pid, mid, gid = uid(), uid(), uid()
-    defs += (f'<pattern id="{pid}" width="{sq_s + gap}" height="{sq_s + gap}" patternUnits="userSpaceOnUse" x="{ex}" y="{base}">'
-             f'<rect width="{sq_s}" height="{sq_s}" rx="1" fill="{fg}"/></pattern>'
-             f'<linearGradient id="{gid}" x1="0" y1="{base}" x2="0" y2="{base - 66}" gradientUnits="userSpaceOnUse">'
-             f'<stop offset="0" stop-color="#fff" stop-opacity=".85"/><stop offset="1" stop-color="#fff" stop-opacity=".18"/></linearGradient>'
-             f'<mask id="{mid}"><rect x="{ex - 2}" y="{base - 70}" width="200" height="72" fill="url(#{gid})"/></mask>')
+    defs = (f'<pattern id="{pid}" width="{sq_s + gap}" height="{sq_s + gap}" patternUnits="userSpaceOnUse" x="{ex}" y="{base}">'
+            f'<rect width="{sq_s}" height="{sq_s}" rx="1" fill="{fg}"/></pattern>'
+            f'<linearGradient id="{gid}" x1="0" y1="{base}" x2="0" y2="{base - 66}" gradientUnits="userSpaceOnUse">'
+            f'<stop offset="0" stop-color="#fff" stop-opacity=".85"/><stop offset="1" stop-color="#fff" stop-opacity=".18"/></linearGradient>'
+            f'<mask id="{mid}"><rect x="{ex - 2}" y="{base - 70}" width="200" height="72" fill="url(#{gid})"/></mask>')
     bars = []
     rng = mulberry(9)
     for i in range(16):
@@ -794,7 +781,7 @@ def player(T):
                     f'<animate attributeName="y" values="{";".join(str(base - h + gap) for h in hs)}" dur="{dur}s" calcMode="discrete" repeatCount="indefinite"/></rect>')
     b.append(f'<g mask="url(#{mid})" shape-rendering="crispEdges">{"".join(bars)}</g>')
     # progression
-    py, pw = 150, W - 30 - x0
+    py, pw = 124, W - 8 - x0
     count = 56
     sw = (pw - (count - 1) * 2) / count
     track = "".join(f'<rect x="{n(x0 + i * (sw + 2))}" y="{py}" width="{n(sw)}" height="6" rx="1"/>' for i in range(count))
@@ -803,47 +790,40 @@ def player(T):
     b.append(f'<g fill="{fg}" fill-opacity=".1">{track}</g>'
              f'<rect x="{x0}" y="{py}" width="0" height="6" fill="{PRIMARY}" clip-path="url(#{tid})">'
              f'<animate attributeName="width" values="{n(pw * .05)};{n(pw)}" dur="90s" calcMode="linear" repeatCount="indefinite"/></rect>')
-    b.append(kicker("SIDE A", x0, py + 32, mfg, 1, "start", 10, .16) + kicker("60:00", W - 30, py + 32, mfg, 1, "end", 10, .16))
+    b.append(kicker("SIDE A", x0, py + 30, mfg) + kicker("60:00", W - 8, py + 30, mfg, 1, "end"))
     heart = [".#.#.", "#####", "#####", ".###.", "..#.."]
     hx = x0 + pw / 2 - 40
     hc = [(c, r) for r, row in enumerate(heart) for c, v in enumerate(row) if v == "#"]
-    b.append(f'<path d="{cells_d(hc, 2.4, .2, hx, py + 20.5)}" fill="{PRIMARY}" shape-rendering="crispEdges" style="animation:beat .333s steps(1) infinite"/>'
-             + kicker("180 BPM", hx + 20, py + 32, fg, 1, "start", 10, .16))
-    return svg(W, H, "".join(b), f"Now playing: {TRACK[0].title()} — {TRACK[1].title()}", spin_css, defs)
+    b.append(f'<path d="{cells_d(hc, 2.4, .2, hx, py + 18.5)}" fill="{PRIMARY}" shape-rendering="crispEdges" style="animation:beat .333s steps(1) infinite"/>'
+             + kicker("180 BPM", hx + 20, py + 30, fg))
+    return svg(W, H, "".join(b), f"Now playing: {TRACK[0].title()} — {TRACK[1].title()}", css, defs)
 
 
 # ============ 6. FIN / CONTACT ============
 def outro(T):
-    W, H = 900, 340
-    clip = uid()
-    defs = [f'<clipPath id="{clip}"><rect width="{W}" height="{H}" rx="28"/></clipPath>']
-    glow = uid()
-    defs.append(f'<radialGradient id="{glow}" gradientUnits="userSpaceOnUse" cx="0" cy="0" r="1" gradientTransform="translate(140 380) scale(520 300)">'
-                f'<stop offset="0" stop-color="{PRIMARY}" stop-opacity=".18"/><stop offset="1" stop-color="{PRIMARY}" stop-opacity="0"/></radialGradient>')
-    b = [f'<rect width="{W}" height="{H}" fill="{T["hero"]}"/><rect width="{W}" height="{H}" fill="url(#{glow})"/>']
-    fd, fb = flora(PAPER, "top-right", W - 336 - 110, -20, size=56, cell=6, seed=37, grow=.4, alpha=.8, soft=.35)
+    W, H = 900, 300
+    fg = T["fg"]
+    defs, b = [], []
+    fd, fb = flora(fg, "top-right", W - 336 - 90, -30, size=56, cell=6, seed=37, grow=.4, alpha=.9, soft=.3)
     defs.append(fd); b.append(fb)
-    b.append(kicker("CONTINUE ? — PRESS START", 40, 70, "#fff", .5))
-    size = 60
-    b.append(text(LIGHT, OUTRO[0], 37, 142, size, "#fff", track=-.025))
-    b.append(text(LIGHT, OUTRO[1], 37 + 70, 204, size, "#fff", .55, track=-.025))
-    b.append(text(SCRIPT, OUTRO[2], 37 + 290, 236, 58, "#fff"))
-    b.append(f'<rect x="40" y="{H - 64}" width="{W - 80}" height="1" fill="#fff" fill-opacity=".12"/>')
-    b.append(kicker(f"© {datetime.date.today().year} {FIRST} {LAST}", 40, H - 30, "#fff", .4, "start", 10, .2))
-    digits, c = crossfade([kicker(f"CONTINUE ? {k}", W - 40, H - 30, "#fff", .55, "end", 10, .2) for k in range(9, -1, -1)], 1, .05)
-    b.append(spinner(W - 40 - MONO.width("CONTINUE ? 9", 10, .2) - 22, H - 40, 11, PRIMARY) + digits)
-    if T["rim"]:
-        b.append(f'<rect x=".5" y=".5" width="{W - 1}" height="{H - 1}" rx="28" fill="none" stroke="#fff" stroke-opacity=".1"/>')
-    return svg(W, H, f'<g clip-path="url(#{clip})">{"".join(b)}</g>', f"{OUTRO[0]} {OUTRO[1]} {OUTRO[2]}", c, "".join(defs))
+    b.append(kicker("CONTINUE ? — PRESS START", 14, 40, fg, .55))
+    size = 58
+    b.append(text(DISPLAY, OUTRO[0], 12, 112, size, fg))
+    b.append(text(DISPLAY, OUTRO[1], 12 + 70, 174, size, fg, .5))
+    b.append(text(ACCENT, OUTRO[2], 12 + 330, 212, 58, PRIMARY))
+    b.append(f'<rect x="14" y="{H - 52}" width="{W - 28}" height="1" fill="{fg}" fill-opacity=".14"/>')
+    b.append(kicker(f"© {datetime.date.today().year} {FIRST} {LAST}", 14, H - 20, fg, .45))
+    digits, c = crossfade([kicker(f"CONTINUE ? {k}", W - 14, H - 20, fg, .6, "end") for k in range(9, -1, -1)], 1, .05)
+    b.append(spinner(W - 14 - LABEL.width("CONTINUE ? 9", KICK, .14) - 22, H - 30, 11, PRIMARY) + digits)
+    return svg(W, H, "".join(b), f"{OUTRO[0]} {OUTRO[1]} {OUTRO[2]}", c, "".join(defs))
 
 
 def button(T, label, delay):
-    """Bouton pilule façon CTA genidraw, avec le balayage de pixels PixelHover en boucle."""
+    """Pilule au trait fin (pas de fond), balayage de pixels PixelHover en boucle."""
     h, pad, dot = 52, 24, 38
-    tw = MEDIUM.width(label, 13, .08)
+    tw = TEXT.width(label, 15, .06)
     w = round(pad + tw + 18 + dot + 7)
-    light = T is THEMES["light"]
-    fill, ink = (T["fg"], T["bg"]) if light else ("#ffffff", "#171717")
+    fg = T["fg"]
     clip = uid()
     cell, cols, rows = 4, -(-w // 4), -(-h // 4)
     rng = mulberry(len(label) * 31 + 7)
@@ -854,10 +834,10 @@ def button(T, label, delay):
             buckets.setdefault(round(delay_frac * 12), []).append((c, r))
     sweep = "".join(f'<path class="sw" d="{cells_d(cells, cell, .5)}" style="animation:sweep 6s linear {n(delay + k * .045)}s infinite"/>'
                     for k, cells in sorted(buckets.items()))
-    body = (f'<g clip-path="url(#{clip})"><rect width="{w}" height="{h}" fill="{fill}"/>'
-            f'<g fill="{PRIMARY}" fill-opacity=".45" shape-rendering="crispEdges">{sweep}</g></g>'
-            + text(MEDIUM, label, pad, h / 2 + 4.6, 13, ink, track=.08)
-            + f'<circle cx="{n(w - 7 - dot / 2)}" cy="{h / 2}" r="{dot / 2}" fill="{ink}"/>' + arrow(w - 7 - dot / 2, h / 2, 8, fill))
+    body = (f'<g clip-path="url(#{clip})"><g fill="{PRIMARY}" fill-opacity=".4" shape-rendering="crispEdges">{sweep}</g></g>'
+            f'<rect x=".5" y=".5" width="{w - 1}" height="{h - 1}" rx="{(h - 1) / 2}" fill="none" stroke="{fg}" stroke-opacity=".28"/>'
+            + text(TEXT, label, pad, h / 2 + 5, 15, fg, track=.06)
+            + f'<circle cx="{n(w - 7 - dot / 2)}" cy="{h / 2}" r="{dot / 2}" fill="{PRIMARY}"/>' + arrow(w - 7 - dot / 2, h / 2, 8, "#171412"))
     css = ".sw{opacity:0}@keyframes sweep{0%{opacity:0}4%{opacity:1}9%{opacity:0}100%{opacity:0}}"
     defs = f'<clipPath id="{clip}"><rect width="{w}" height="{h}" rx="{h / 2}"/></clipPath>'
     return svg(w, h, body, label, css, defs)
