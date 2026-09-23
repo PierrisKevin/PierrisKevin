@@ -29,14 +29,6 @@ ITEMS = [
     ("Bash",       "bomb",   "ONE COMMAND.",     "BOOM.",               4),
 ]
 TRACK     = ("HAPPY HARDCORE MEGAMIX", "VOL. 180 — STAY HAPPY, STAY HARDCORE")
-SECTIONS  = {  # séparateurs : (texte gauche, texte droite)
-    "profile": ("PLAYER 1", "PROFILE"),
-    "stack":   ("INVENTORY", "STACK"),
-    "scores":  ("HIGH SCORES", "GITHUB"),
-    "music":   ("NOW PLAYING", "SOUNDTRACK"),
-    "bonus":   ("BONUS STAGE", "CONTRIBUTIONS"),
-    "contact": ("CONTINUE ?", "CONTACT"),
-}
 OUTRO     = ("LET'S BUILD", "SOMETHING", "TOGETHER")
 LINKS     = [("email", "EMAIL"), ("linkedin", "LINKEDIN"), ("portfolio", "PORTFOLIO")]
 # Police pixel (Google Fonts, licence OFL) : (fichier, axes variables)
@@ -234,48 +226,6 @@ def sq(x, y, s):
 
 def cells_d(cells, cell, gap=0.0, ox=0.0, oy=0.0):
     return "".join(sq(ox + x * cell + gap, oy + y * cell + gap, cell - 2 * gap) for x, y in cells)
-
-
-# ---------------- ORNEMENT (rosace pixel de genidraw) ----------------
-ORN_PETAL = ["....333....", "...31123...", "...31123...", "....312...."]
-ORN_BUDS = [(1, 1, "5"), (2, 2, "6")]
-ORN_CENTER = ["444", "484", "444"]
-ORN_OPACITY = {"1": .45, "2": .7, "3": 1, "4": .18, "5": .4, "6": .65, "8": .9}
-
-
-def ornament_cells():
-    size = 11
-    grid = [["."] * size for _ in range(size)]
-
-    def place(x, y, tone):
-        column, row = x, y
-        for _ in range(4):
-            grid[row][column] = tone
-            column, row = size - 1 - row, column
-
-    for y, line in enumerate(ORN_PETAL):
-        for x, tone in enumerate(line):
-            if tone != ".":
-                place(x, y, tone)
-    for x, y, tone in ORN_BUDS:
-        place(x, y, tone)
-    for y, line in enumerate(ORN_CENTER):
-        for x, tone in enumerate(line):
-            grid[y + 4][x + 4] = tone
-    return [(x, y, grid[y][x]) for y in range(size) for x in range(size) if grid[y][x] != "."]
-
-
-def ornament(x, y, cell, color, bloom=None, alpha=1.0):
-    """bloom = délai (s) : les pixels s'allument anneau par anneau depuis le cœur."""
-    groups = {}
-    for cx, cy, tone in ornament_cells():
-        ring = max(abs(cx - 5), abs(cy - 5)) if bloom is not None else 0
-        groups.setdefault((ring, tone), []).append((cx, cy))
-    out = []
-    for (ring, tone), cells in sorted(groups.items()):
-        style = anim("fin", .5, bloom + ring * .12, "ease-out both") if bloom is not None else ""
-        out.append(f'<path d="{cells_d(cells, cell, 0, x, y)}" fill="{color}" fill-opacity="{n(ORN_OPACITY[tone] * alpha)}"{style}/>')
-    return f'<g shape-rendering="crispEdges">{"".join(out)}</g>'
 
 
 # ---------------- FLORE (portage de genidraw flora.ts) ----------------
@@ -615,16 +565,6 @@ def hero(T):
     return svg(W, H, "".join(b), name, css, "".join(defs))
 
 
-# ============ 2. SÉPARATEUR ============
-def divider(T, left, right):
-    W, H, cx = 900, 118, 450
-    b = [kicker(left, cx - 40, 40, T["fg"], 1, "end"),
-         ornament(cx - 22, 12, 4, T["fg"], bloom=.2),
-         kicker(right, cx + 40, 40, T["fg"], 1, "start"),
-         f'<rect x="{cx - .5}" y="76" width="1" height="42" fill="{T["fg"]}" fill-opacity=".25" style="transform-origin:{cx}px 76px;animation:grow .9s cubic-bezier(.16,1,.3,1) .6s both"/>']
-    return svg(W, H, "".join(b), f"{left} — {right}", "@keyframes grow{from{transform:scaleY(0)}}")
-
-
 # ============ 3. PROFIL ============
 def profile(T):
     W, P = 900, 12
@@ -855,8 +795,6 @@ def bust_cache(files):
 def build():
     T = THEME
     files = {"hero": hero(T), "profile": profile(T), "stack": stack(T), "player": player(T), "outro": outro(T)}
-    for key, (left, right) in SECTIONS.items():
-        files[f"divider-{key}"] = divider(T, left, right)
     for i, (key, label) in enumerate(LINKS):
         files[f"btn-{key}"] = button(T, label, 1.2 + i * .35)
     os.makedirs(OUT, exist_ok=True)
